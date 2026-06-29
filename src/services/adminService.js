@@ -38,7 +38,7 @@ export const adminApi = {
   reverseTransaction: (id, reason) => api.post(`/transactions/${id}/reverse/`, { reason }),
 
   // CSV export (returns blob)
-  exportTransactionsCSV: (param) => {
+  exportTransactionsCSV: (params) => {
     const queryString = new URLSearchParams(params).toString();
     const url = `/transactions/admin/export-csv/${queryString ? `?${queryString}` : ''}`;
     return api.get(url, { responseType: 'blob' });
