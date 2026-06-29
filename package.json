@@ -14,9 +14,11 @@
   "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "node node_modules/react-scripts/scripts/build.js",
+    "vercel-build": "node node_modules/react-scripts/scripts/build.js",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "postinstall": "node -e \"const fs=require('fs'),p='node_modules/.bin';try{fs.readdirSync(p).forEach(f=>{const fp=p+'/'+f;try{fs.chmodSync(fp,0o755)}catch(e){}})}catch(e){}\""
   },
   "browserslist": {
     "production": [">0.2%", "not dead", "not op_mini all"],

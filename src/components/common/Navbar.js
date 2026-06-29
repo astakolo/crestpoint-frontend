@@ -9,11 +9,15 @@ const NAV_LINKS = [
   { to: '/accounts', label: 'Accounts' },
   { to: '/transactions', label: 'Transactions' },
   { to: '/transfer', label: 'Transfer' },
+  { to: '/withdrawal-requests', label: 'Withdrawals' },
   { to: '/notifications', label: 'Notifications', hasBadge: true },
 ];
 
 const ADMIN_LINKS = [
-  { to: '/admin', label: 'Admin Dashboard' },
+  { to: '/admin', label: 'Dashboard' },
+  { to: '/admin/users', label: 'Users' },
+  { to: '/admin/transactions', label: 'Transactions' },
+  { to: '/admin/withdrawals', label: 'Withdrawals' },
 ];
 
 const linkStyle = {

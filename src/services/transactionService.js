@@ -25,6 +25,35 @@ const transactionService = {
     const response = await api.get(`/transactions/${id}/`);
     return response.data;
   },
+
+  // ── Withdrawal Requests ──
+
+  async createWithdrawalRequest(data) {
+    const response = await api.post('/transactions/withdrawal-requests/', data);
+    return response.data;
+  },
+
+  async getWithdrawalRequests(params = {}) {
+    const response = await api.get('/transactions/withdrawal-requests/list/', { params });
+    return response.data;
+  },
+
+  async getWithdrawalRequest(id) {
+    const response = await api.get(`/transactions/withdrawal-requests/${id}/`);
+    return response.data;
+  },
+
+  // ── Admin: Withdrawal Requests ──
+
+  async adminGetWithdrawalRequests(params = {}) {
+    const response = await api.get('/transactions/withdrawal-requests/admin/', { params });
+    return response.data;
+  },
+
+  async adminReviewWithdrawal(id, data) {
+    const response = await api.post(`/transactions/withdrawal-requests/${id}/review/`, data);
+    return response.data;
+  },
 };
 
 export default transactionService;

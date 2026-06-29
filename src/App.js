@@ -16,9 +16,11 @@ import TransferPage from './pages/dashboard/TransferPage';
 import KYCPage from './pages/dashboard/KYCPage';
 import NotificationsPage from './pages/dashboard/NotificationsPage';
 import DepositWithdrawPage from './pages/dashboard/DepositWithdrawPage';
+import WithdrawalRequestsPage from './pages/dashboard/WithdrawalRequestsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminTransactionsPage from './pages/admin/AdminTransactionsPage';
+import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected route wrapper
@@ -136,6 +138,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/withdrawal-requests"
+        element={
+          <ProtectedRoute>
+            <WithdrawalRequestsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/kyc"
         element={
           <ProtectedRoute>
@@ -174,6 +184,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute adminOnly>
             <AdminTransactionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/withdrawals"
+        element={
+          <ProtectedRoute adminOnly>
+            <AdminWithdrawalsPage />
           </ProtectedRoute>
         }
       />
