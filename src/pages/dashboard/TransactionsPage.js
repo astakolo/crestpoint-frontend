@@ -365,9 +365,9 @@ export default function TransactionsPage() {
                 {/* Amount */}
                 <div style={styles.detailAmount}>
                   <span style={{
-                    color: ['credit', 'deposit', 'transfer_in'].includes(txDetail.type?.toLowerCase()) ? '#059669' : '#dc2626',
+                    color: ['credit', 'deposit', 'transfer_in'].includes((txDetail.transaction_type || txDetail.type || '').toLowerCase()) ? '#059669' : '#dc2626',
                   }}>
-                    {['credit', 'deposit', 'transfer_in'].includes(txDetail.type?.toLowerCase()) ? '+' : '-'}
+                    {['credit', 'deposit', 'transfer_in'].includes((txDetail.transaction_type || txDetail.type || '').toLowerCase()) ? '+' : '-'}
                     {formatCurrency(txDetail.amount, txDetail.currency)}
                   </span>
                 </div>
@@ -375,8 +375,8 @@ export default function TransactionsPage() {
                 {/* Details Grid */}
                 <div style={styles.detailGrid}>
                   <DetailRow label="Reference" value={txDetail.reference || txDetail.id || 'N/A'} />
-                  <DetailRow label="Type" value={(txDetail.type || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
-                  <DetailRow label="Date" value={formatDate(txDetail.date || txDetail.created_at)} />
+                  <DetailRow label="Type" value={(txDetail.transaction_type || txDetail.type || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
+                  <DetailRow label="Date" value={formatDate(txDetail.created_at)} />
                   {txDetail.description && (
                     <DetailRow label="Description" value={txDetail.description} />
                   )}

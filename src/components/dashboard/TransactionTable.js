@@ -27,6 +27,8 @@ function formatDate(dateStr) {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   } catch {
     return dateStr;
@@ -65,8 +67,9 @@ function StatusBadge({ status }) {
 }
 
 function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
-  const isIncoming = ['credit', 'deposit', 'incoming'].includes(
-    transaction.type?.toLowerCase()
+  const txType = transaction.transaction_type || transaction.type || '';
+  const isIncoming = ['credit', 'deposit', 'incoming', 'transfer_in'].includes(
+    txType.toLowerCase()
   );
   const amountColor = isIncoming ? '#059669' : '#dc2626';
   const amountPrefix = isIncoming ? '+' : '-';
@@ -88,7 +91,7 @@ function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
     >
       <td style={styles.td}>
         <span style={{ fontWeight: 500, color: '#111827' }}>
-          {formatDate(transaction.date || transaction.created_at)}
+          {formatDate(transaction.created_at)}
         </span>
       </td>
       <td style={{ ...styles.td, color: '#6b7280', fontSize: '13px' }}>
@@ -105,7 +108,7 @@ function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
           color: '#374151',
           textTransform: 'capitalize',
         }}>
-          {transaction.type || '—'}
+          {(txType || '—').replace(/_/g, ' ')}
         </span>
       </td>
       <td style={{ ...styles.td, textAlign: 'right' }}>
@@ -126,8 +129,9 @@ function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
 }
 
 function TransactionCard({ transaction, onViewDetails, showAccount }) {
-  const isIncoming = ['credit', 'deposit', 'incoming'].includes(
-    transaction.type?.toLowerCase()
+  const txType = transaction.transaction_type || transaction.type || '';
+  const isIncoming = ['credit', 'deposit', 'incoming', 'transfer_in'].includes(
+    txType.toLowerCase()
   );
   const amountColor = isIncoming ? '#059669' : '#dc2626';
   const amountPrefix = isIncoming ? '+' : '-';
@@ -153,10 +157,10 @@ function TransactionCard({ transaction, onViewDetails, showAccount }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '2px', textTransform: 'capitalize' }}>
-            {transaction.type || 'Transaction'}
+            {(txType || 'Transaction').replace(/_/g, ' ')}
           </div>
           <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-            {formatDate(transaction.date || transaction.created_at)}
+            {formatDate(transaction.created_at)}
           </div>
         </div>
         <span style={{ fontWeight: 600, color: amountColor, fontSize: '16px' }}>
