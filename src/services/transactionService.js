@@ -54,6 +54,13 @@ const transactionService = {
     const response = await api.post(`/transactions/withdrawal-requests/${id}/review/`, data);
     return response.data;
   },
+
+  // ── Admin: Generate Withdrawal OTP ──
+
+  async adminGenerateOTP(userId) {
+    const response = await api.post('/transactions/withdrawal-requests/generate-otp/', { user_id: userId });
+    return response.data;
+  },
 };
 
 export default transactionService;

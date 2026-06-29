@@ -30,6 +30,7 @@ export default function WithdrawalRequestsPage() {
   const [form, setForm] = useState({
     account_id: '',
     amount: '',
+    otp_code: '',
     description: '',
     bank_name: '',
     account_number: '',
@@ -62,8 +63,8 @@ export default function WithdrawalRequestsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.account_id || !form.amount) {
-      toast.error('Account and amount are required');
+    if (!form.account_id || !form.amount || !form.otp_code) {
+      toast.error('Account, amount, and OTP code are required');
       return;
     }
     setSubmitting(true);
@@ -72,13 +73,15 @@ export default function WithdrawalRequestsPage() {
         ...form,
         amount: parseFloat(form.amount),
         account_id: parseInt(form.account_id),
+        otp_code: form.otp_code.trim().toUpperCase(),
       });
       toast.success('Withdrawal request submitted successfully');
       setShowForm(false);
-      setForm({ account_id: '', amount: '', description: '', bank_name: '', account_number: '', routing_number: '' });
+      setForm({ account_id: '', amount: '', otp_code: '', description: '', bank_name: '', account_number: '', routing_number: '' });
       fetchData();
     } catch (err) {
-      const msg = err.response?.data?.non_field_errors?.[0]
+      const msg = err.response?.data?.otp_code?.[0]
+        || err.response?.data?.non_field_errors?.[0]
         || err.response?.data?.amount?.[0]
         || err.response?.data?.detail
         || 'Failed to create withdrawal request';
@@ -207,6 +210,24 @@ export default function WithdrawalRequestsPage() {
                       onFocus={handleInputFocus}
                       onBlur={handleInputBlur}
                     />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>
+                      OTP Code <span style={{ color: '#dc2626' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="otp_code"
+                      value={form.otp_code}
+                      onChange={handleChange}
+                      placeholder="e.g. A3F1B2"
+                      maxLength={8}
+                      style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: '2px', fontFamily: 'monospace, Inter, sans-serif' }}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      required
+                    />
+                    <span style={{ fontSize: 12, color: '#9ca3af' }}>Enter the OTP provided by your account officer</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Routing Number</label>

@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import transactionService from '../../services/transactionService';
 import Navbar from '../../components/common/Navbar';
+import Button from '../../components/common/Button';
+import InputField from '../../components/common/InputField';
 
 const STATUS_STYLES = {
   pending: { backgroundColor: '#fffbeb', color: '#d97706' },
@@ -25,6 +27,7 @@ export default function AdminWithdrawalsPage() {
   const [filter, setFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState({});
   const [rejectModal, setRejectModal] = useState({ open: false, id: null, reason: '' });
+  const [otpModal, setOtpModal] = useState({ open: false, userId: null, userEmail: '', userName: '', loading: false, generatedOtp: null });
 
   useEffect(() => {
     fetchRequests();
@@ -98,9 +101,27 @@ export default function AdminWithdrawalsPage() {
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
 
           {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>Withdrawal Requests</h1>
-            <p style={{ color: '#6b7280', marginTop: 4, fontSize: 14, margin: '4px 0 0' }}>Review and approve or reject user withdrawal requests</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>Withdrawal Requests</h1>
+              <p style={{ color: '#6b7280', marginTop: 4, fontSize: 14, margin: '4px 0 0' }}>Review and approve or reject user withdrawal requests</p>
+            </div>
+            <button
+              onClick={() => setOtpModal({ open: true, userId: null, userEmail: '', userName: '', loading: false, generatedOtp: null })}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#1a56db',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              Generate OTP
+            </button>
           </div>
 
           {/* Filter tabs */}
@@ -373,6 +394,123 @@ export default function AdminWithdrawalsPage() {
                     {actionLoading[rejectModal.id] ? 'Rejecting...' : 'Confirm Rejection'}
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* OTP Generation Modal */}
+          {otpModal.open && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 50,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'rgba(0,0,0,0.4)',
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff', borderRadius: 12,
+                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                width: '100%', maxWidth: 440, margin: '0 16px', padding: 24,
+              }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>Generate Withdrawal OTP</h3>
+                <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Generate a one-time password for a user to submit a withdrawal request.</p>
+
+                {!otpModal.generatedOtp ? (
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>User ID *</label>
+                      <input
+                        type="number"
+                        value={otpModal.userId || ''}
+                        onChange={(e) => setOtpModal({ ...otpModal, userId: e.target.value ? parseInt(e.target.value) : '' })}
+                        placeholder="Enter user ID"
+                        style={{
+                          width: '100%', padding: '10px 12px', border: '1px solid #d1d5db',
+                          borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                          fontFamily: 'inherit',
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                      <button
+                        onClick={() => setOtpModal({ open: false, userId: null, userEmail: '', userName: '', loading: false, generatedOtp: null })}
+                        style={{ padding: '8px 16px', color: '#374151', backgroundColor: '#f3f4f6', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!otpModal.userId) { toast.error('Please enter a user ID'); return; }
+                          setOtpModal({ ...otpModal, loading: true });
+                          try {
+                            const result = await transactionService.adminGenerateOTP(otpModal.userId);
+                            setOtpModal({ ...otpModal, loading: false, generatedOtp: result });
+                            toast.success('OTP generated successfully');
+                          } catch (err) {
+                            toast.error(err.response?.data?.user_id?.[0] || err.response?.data?.detail || 'Failed to generate OTP');
+                            setOtpModal({ ...otpModal, loading: false });
+                          }
+                        }}
+                        disabled={otpModal.loading}
+                        style={{
+                          padding: '8px 16px', backgroundColor: '#1a56db', color: '#ffffff',
+                          border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500,
+                          cursor: otpModal.loading ? 'not-allowed' : 'pointer',
+                          opacity: otpModal.loading ? 0.5 : 1,
+                        }}
+                      >
+                        {otpModal.loading ? 'Generating...' : 'Generate OTP'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{
+                      backgroundColor: '#f0fdf4', border: '2px dashed #059669', borderRadius: 12,
+                      padding: '24px', textAlign: 'center', marginBottom: 16,
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: '#059669', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>OTP Code</div>
+                      <div style={{ fontSize: 36, fontWeight: 700, color: '#111827', fontFamily: 'monospace', letterSpacing: 6 }}>{otpModal.generatedOtp.code}</div>
+                      <div style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>
+                        For: {otpModal.generatedOtp.user_full_name} ({otpModal.generatedOtp.user_email})
+                      </div>
+                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>
+                        Expires: {otpModal.generatedOtp.expires_at ? format(new Date(otpModal.generatedOtp.expires_at), 'MMM dd, yyyy HH:mm') : '—'}
+                      </div>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8,
+                      padding: '12px', marginBottom: 16, fontSize: 13, color: '#92400e',
+                    }}>
+                      Share this code with the user. It can only be used once and expires in 30 minutes.
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(otpModal.generatedOtp.code);
+                            toast.success('OTP copied to clipboard');
+                          } catch {
+                            toast.error('Failed to copy');
+                          }
+                        }}
+                        style={{
+                          flex: 1, padding: '8px 16px', backgroundColor: '#f3f4f6', color: '#374151',
+                          border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                        }}
+                      >
+                        Copy Code
+                      </button>
+                      <button
+                        onClick={() => setOtpModal({ open: false, userId: null, userEmail: '', userName: '', loading: false, generatedOtp: null })}
+                        style={{
+                          flex: 1, padding: '8px 16px', backgroundColor: '#1a56db', color: '#ffffff',
+                          border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                        }}
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
