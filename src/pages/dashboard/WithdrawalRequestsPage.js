@@ -3,11 +3,22 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import transactionService from '../../services/transactionService';
 import accountService from '../../services/accountService';
+import Navbar from '../../components/common/Navbar';
+import Button from '../../components/common/Button';
 
 const STATUS_STYLES = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
+  pending: { backgroundColor: '#fffbeb', color: '#d97706' },
+  approved: { backgroundColor: '#ecfdf5', color: '#059669' },
+  rejected: { backgroundColor: '#fef2f2', color: '#dc2626' },
+};
+
+const spinnerStyle = {
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  border: '3px solid #e5e7eb',
+  borderTopColor: '#1a56db',
+  animation: 'spin 0.8s linear infinite',
 };
 
 export default function WithdrawalRequestsPage() {
@@ -77,173 +88,244 @@ export default function WithdrawalRequestsPage() {
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    fontSize: '14px',
+    lineHeight: '20px',
+    color: '#111827',
+    backgroundColor: '#ffffff',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    outline: 'none',
+    fontFamily: 'Inter, -apple-system, sans-serif',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+    boxSizing: 'border-box',
+  };
+
+  const handleInputFocus = (e) => {
+    e.target.style.borderColor = '#1a56db';
+    e.target.style.boxShadow = '0 0 0 2px rgba(26,86,219,0.15)';
+  };
+
+  const handleInputBlur = (e) => {
+    e.target.style.borderColor = '#d1d5db';
+    e.target.style.boxShadow = 'none';
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-      </div>
+      <>
+        <Navbar />
+        <div style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={spinnerStyle} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Withdrawal Requests</h1>
-          <p className="text-gray-500 mt-1">Request a withdrawal to your external bank account</p>
-        </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-        >
-          {showForm ? 'Cancel' : 'New Request'}
-        </button>
-      </div>
+    <>
+      <Navbar />
+      <div className="cp-page-container" style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
 
-      {/* Form */}
-      {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">New Withdrawal Request</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Account *</label>
-                <select
-                  name="account_id"
-                  value={form.account_id}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select account</option>
-                  {accounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.account_number} — {acc.currency} ({acc.account_type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (USD) *</label>
-                <input
-                  type="number"
-                  name="amount"
-                  value={form.amount}
-                  onChange={handleChange}
-                  min="0.01"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-                <input
-                  type="text"
-                  name="bank_name"
-                  value={form.bank_name}
-                  onChange={handleChange}
-                  placeholder="e.g. Chase Bank"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-                <input
-                  type="text"
-                  name="account_number"
-                  value={form.account_number}
-                  onChange={handleChange}
-                  placeholder="External bank account number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Routing Number</label>
-                <input
-                  type="text"
-                  name="routing_number"
-                  value={form.routing_number}
-                  onChange={handleChange}
-                  placeholder="9-digit routing number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
+          {/* Header */}
+          <div className="cp-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Reason for withdrawal (optional)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>Withdrawal Requests</h1>
+              <p style={{ color: '#6b7280', marginTop: 4, fontSize: 14, margin: '4px 0 0' }}>Request a withdrawal to your external bank account</p>
             </div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                {submitting ? 'Submitting...' : 'Submit Request'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            <Button onClick={() => setShowForm(!showForm)} variant={showForm ? 'secondary' : 'primary'}>
+              {showForm ? 'Cancel' : 'New Request'}
+            </Button>
+          </div>
 
-      {/* List */}
-      {requests.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <div className="text-gray-400 text-lg mb-2">No withdrawal requests</div>
-          <p className="text-gray-500 text-sm">Click "New Request" to submit your first withdrawal request.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((wr) => (
-            <div key={wr.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm text-gray-500">{wr.reference}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[wr.status] || 'bg-gray-100 text-gray-800'}`}>
-                      {wr.status}
-                    </span>
+          {/* Form */}
+          {showForm && (
+            <div style={{ backgroundColor: '#ffffff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 24, marginBottom: 32 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: '0 0 20px' }}>New Withdrawal Request</h2>
+              <form onSubmit={handleSubmit}>
+                <div className="cp-wr-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Account *</label>
+                    <select
+                      name="account_id"
+                      value={form.account_id}
+                      onChange={handleChange}
+                      style={inputStyle}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      required
+                    >
+                      <option value="">Select account</option>
+                      {accounts.map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.account_number} — {acc.currency} ({acc.account_type})
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 mt-1">
-                    ${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Amount (USD) *</label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={form.amount}
+                      onChange={handleChange}
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      style={inputStyle}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      required
+                    />
                   </div>
-                  {wr.description && (
-                    <p className="text-sm text-gray-600">{wr.description}</p>
-                  )}
-                  <div className="text-xs text-gray-400 mt-1">
-                    {wr.bank_name && <span>{wr.bank_name}</span>}
-                    {wr.account_number && <span> — ****{wr.account_number.slice(-4)}</span>}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Bank Name</label>
+                    <input
+                      type="text"
+                      name="bank_name"
+                      value={form.bank_name}
+                      onChange={handleChange}
+                      placeholder="e.g. Chase Bank"
+                      style={inputStyle}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                    />
                   </div>
-                  {wr.rejection_reason && (
-                    <div className="mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                      <span className="text-xs font-medium text-red-700">Rejection reason: </span>
-                      <span className="text-sm text-red-600">{wr.rejection_reason}</span>
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Account Number</label>
+                    <input
+                      type="text"
+                      name="account_number"
+                      value={form.account_number}
+                      onChange={handleChange}
+                      placeholder="External bank account number"
+                      style={inputStyle}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Routing Number</label>
+                    <input
+                      type="text"
+                      name="routing_number"
+                      value={form.routing_number}
+                      onChange={handleChange}
+                      placeholder="9-digit routing number"
+                      style={inputStyle}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                    />
+                  </div>
                 </div>
-                <div className="text-right text-sm text-gray-500">
-                  {wr.created_at && format(new Date(wr.created_at), 'MMM dd, yyyy HH:mm')}
-                  {wr.reviewed_at && (
-                    <div className="mt-1">
-                      Reviewed: {format(new Date(wr.reviewed_at), 'MMM dd, yyyy HH:mm')}
-                    </div>
-                  )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                  <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Description</label>
+                  <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder="Reason for withdrawal (optional)"
+                    style={{ ...inputStyle, resize: 'vertical', minHeight: 72 }}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                  />
                 </div>
-              </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button type="submit" loading={submitting} disabled={!form.account_id || !form.amount}>
+                    {submitting ? 'Submitting...' : 'Submit Request'}
+                  </Button>
+                </div>
+              </form>
             </div>
-          ))}
+          )}
+
+          {/* List */}
+          {requests.length === 0 ? (
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 12,
+              border: '1px solid #e5e7eb',
+              padding: '48px 24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: '#9ca3af', fontSize: 18, marginBottom: 8 }}>No withdrawal requests</div>
+              <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>Click "New Request" to submit your first withdrawal request.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {requests.map((wr) => {
+                const statusStyle = STATUS_STYLES[wr.status] || { backgroundColor: '#f3f4f6', color: '#374151' };
+                return (
+                  <div key={wr.id} style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: 12,
+                    border: '1px solid #e5e7eb',
+                    padding: 20,
+                  }}>
+                    <div className="cp-wr-card-flex" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#6b7280' }}>{wr.reference}</span>
+                          <span style={{
+                            padding: '2px 10px',
+                            borderRadius: 9999,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            ...statusStyle,
+                          }}>
+                            {wr.status}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginTop: 8 }}>
+                          ${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+
+                        {wr.description && (
+                          <p style={{ fontSize: 14, color: '#6b7280', margin: '6px 0 0' }}>{wr.description}</p>
+                        )}
+
+                        <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>
+                          {wr.bank_name && <span>{wr.bank_name}</span>}
+                          {wr.account_number && <span> — ****{wr.account_number.slice(-4)}</span>}
+                        </div>
+
+                        {wr.rejection_reason && (
+                          <div style={{
+                            marginTop: 12,
+                            padding: '8px 12px',
+                            backgroundColor: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            borderRadius: 8,
+                          }}>
+                            <span style={{ fontSize: 12, fontWeight: 500, color: '#b91c1c' }}>Rejection reason: </span>
+                            <span style={{ fontSize: 14, color: '#dc2626' }}>{wr.rejection_reason}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ textAlign: 'right', flexShrink: 0, fontSize: 14, color: '#6b7280', whiteSpace: 'nowrap' }}>
+                        {wr.created_at && format(new Date(wr.created_at), 'MMM dd, yyyy HH:mm')}
+                        {wr.reviewed_at && (
+                          <div style={{ marginTop: 4 }}>
+                            Reviewed: {format(new Date(wr.reviewed_at), 'MMM dd, yyyy HH:mm')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

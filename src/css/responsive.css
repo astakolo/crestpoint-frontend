@@ -1,0 +1,190 @@
+/* CrestPoint Credit – Global Responsive Styles */
+
+/* ── Navbar: padding on small screens ── */
+@media (max-width: 640px) {
+  nav > div {
+    padding: 0 16px !important;
+  }
+}
+
+/* ── Page containers ── */
+@media (max-width: 640px) {
+  .cp-page-container {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* ── Stats grid: 4-col → 2-col → 1-col ── */
+@media (max-width: 900px) {
+  .cp-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 480px) {
+  .cp-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Filters grid: 5-col → 2-col → 1-col ── */
+@media (max-width: 900px) {
+  .cp-filters-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 540px) {
+  .cp-filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Filter actions wrap ── */
+@media (max-width: 480px) {
+  .cp-filter-actions {
+    flex-direction: column !important;
+  }
+  .cp-filter-actions button {
+    width: 100%;
+  }
+}
+
+/* ── Page header wrap ── */
+@media (max-width: 540px) {
+  .cp-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Active filters wrap ── */
+@media (max-width: 540px) {
+  .cp-active-filters {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* ── Withdrawal request detail grid ── */
+@media (max-width: 540px) {
+  .cp-wr-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Admin withdrawal action buttons stack ── */
+@media (max-width: 640px) {
+  .cp-wr-actions {
+    flex-direction: row !important;
+  }
+}
+
+/* ── Modal responsive ── */
+@media (max-width: 480px) {
+  .cp-modal-overlay > div {
+    margin: 16px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ── Type grid in account creation ── */
+@media (max-width: 480px) {
+  .cp-type-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Section header wrap ── */
+@media (max-width: 480px) {
+  .cp-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Table horizontal scroll ── */
+@media (max-width: 768px) {
+  .cp-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cp-table-wrapper table {
+    min-width: 600px;
+  }
+}
+
+/* ── Quick actions wrap ── */
+@media (max-width: 540px) {
+  .cp-quick-actions {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 360px) {
+  .cp-quick-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Withdrawal request form grid ── */
+@media (max-width: 540px) {
+  .cp-wr-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Withdrawal request card flex → column ── */
+@media (max-width: 540px) {
+  .cp-wr-card-flex {
+    flex-direction: column !important;
+  }
+  .cp-wr-card-flex > div:last-child {
+    text-align: left !important;
+    white-space: normal !important;
+  }
+}
+
+/* ── Notifications tabs scroll ── */
+@media (max-width: 540px) {
+  .cp-notif-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+  }
+  .cp-notif-tabs button {
+    flex-shrink: 0;
+  }
+}
+
+/* ── Notifications header wrap ── */
+@media (max-width: 540px) {
+  .cp-notif-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── Admin filter grid ── */
+@media (max-width: 900px) {
+  .cp-admin-filters {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 540px) {
+  .cp-admin-filters {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Detail row (account detail modal) ── */
+@media (max-width: 480px) {
+  .cp-detail-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+}</arg_value>  

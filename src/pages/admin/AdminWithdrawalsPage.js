@@ -2,11 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import transactionService from '../../services/transactionService';
+import Navbar from '../../components/common/Navbar';
 
 const STATUS_STYLES = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
+  pending: { backgroundColor: '#fffbeb', color: '#d97706' },
+  approved: { backgroundColor: '#ecfdf5', color: '#059669' },
+  rejected: { backgroundColor: '#fef2f2', color: '#dc2626' },
+};
+
+const spinnerStyle = {
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  border: '3px solid #e5e7eb',
+  borderTopColor: '#1a56db',
+  animation: 'spin 0.8s linear infinite',
 };
 
 export default function AdminWithdrawalsPage() {
@@ -72,162 +82,303 @@ export default function AdminWithdrawalsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-      </div>
+      <>
+        <Navbar />
+        <div style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={spinnerStyle} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Withdrawal Requests</h1>
-        <p className="text-gray-500 mt-1">Review and approve or reject user withdrawal requests</p>
-      </div>
+    <>
+      <Navbar />
+      <div className="cp-page-container" style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
-        {['pending', 'approved', 'rejected', 'all'].map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filter === s
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-            {s === 'pending' && requests.length > 0 && (
-              <span className="ml-1.5 bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
-                {requests.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+          {/* Header */}
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: 0 }}>Withdrawal Requests</h1>
+            <p style={{ color: '#6b7280', marginTop: 4, fontSize: 14, margin: '4px 0 0' }}>Review and approve or reject user withdrawal requests</p>
+          </div>
 
-      {/* List */}
-      {requests.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <div className="text-gray-400 text-lg">No {filter === 'all' ? '' : filter + ' '}withdrawal requests</div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((wr) => (
-            <div key={wr.id} className="bg-white rounded-xl border border-gray-200 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-mono text-sm text-gray-500">{wr.reference}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[wr.status] || 'bg-gray-100 text-gray-800'}`}>
-                      {wr.status}
+          {/* Filter tabs */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+            {['pending', 'approved', 'rejected', 'all'].map((s) => {
+              const isActive = filter === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  style={{
+                    padding: '6px 16px',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s, color 0.15s',
+                    backgroundColor: isActive ? '#1a56db' : '#f3f4f6',
+                    color: isActive ? '#ffffff' : '#4b5563',
+                  }}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {s === 'pending' && requests.length > 0 && (
+                    <span style={{
+                      marginLeft: 6,
+                      backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : '#e5e7eb',
+                      color: isActive ? '#ffffff' : '#4b5563',
+                      fontSize: 12,
+                      padding: '2px 6px',
+                      borderRadius: 9999,
+                      fontWeight: 500,
+                    }}>
+                      {requests.length}
                     </span>
-                  </div>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                    <div>
-                      <span className="text-gray-500">User: </span>
-                      <span className="font-medium text-gray-900">{wr.user_full_name || wr.user_email}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Account: </span>
-                      <span className="font-mono text-gray-900">{wr.cp_account_number}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Amount: </span>
-                      <span className="font-bold text-gray-900 text-base">
-                        ${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Requested: </span>
-                      <span className="text-gray-900">
-                        {wr.created_at ? format(new Date(wr.created_at), 'MMM dd, yyyy HH:mm') : '—'}
-                      </span>
-                    </div>
-                    {wr.bank_name && (
-                      <div>
-                        <span className="text-gray-500">Bank: </span>
-                        <span className="text-gray-900">{wr.bank_name}</span>
-                        {wr.account_number && <span className="text-gray-400"> — ****{wr.account_number.slice(-4)}</span>}
-                      </div>
-                    )}
-                    {wr.description && (
-                      <div>
-                        <span className="text-gray-500">Description: </span>
-                        <span className="text-gray-900">{wr.description}</span>
-                      </div>
-                    )}
-                    {wr.rejection_reason && (
-                      <div className="sm:col-span-2 mt-1 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                        <span className="text-xs font-medium text-red-700">Rejected: </span>
-                        <span className="text-sm text-red-600">{wr.rejection_reason}</span>
-                        {wr.reviewer_email && (
-                          <span className="text-xs text-red-400 ml-2">by {wr.reviewer_email}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-                {/* Action buttons (only for pending) */}
-                {wr.status === 'pending' && (
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button
-                      onClick={() => handleApprove(wr.id)}
-                      disabled={actionLoading[wr.id]}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
-                    >
-                      {actionLoading[wr.id] ? 'Processing...' : 'Approve'}
-                    </button>
-                    <button
-                      onClick={() => openReject(wr.id)}
-                      disabled={actionLoading[wr.id]}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
+          {/* List */}
+          {requests.length === 0 ? (
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 12,
+              border: '1px solid #e5e7eb',
+              padding: '48px 24px',
+              textAlign: 'center',
+            }}>
+              <div style={{ color: '#9ca3af', fontSize: 18 }}>
+                No {filter === 'all' ? '' : filter + ' '}withdrawal requests
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {requests.map((wr) => {
+                const statusStyle = STATUS_STYLES[wr.status] || { backgroundColor: '#f3f4f6', color: '#374151' };
+                return (
+                  <div key={wr.id} style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 12,
+                    padding: 20,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#6b7280' }}>{wr.reference}</span>
+                          <span style={{
+                            padding: '2px 10px',
+                            borderRadius: 9999,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            ...statusStyle,
+                          }}>
+                            {wr.status}
+                          </span>
+                        </div>
 
-      {/* Rejection modal */}
-      {rejectModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Withdrawal Request</h3>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rejection reason *</label>
-            <textarea
-              value={rejectModal.reason}
-              onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
-              rows={3}
-              placeholder="Provide a reason for rejecting this request..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
-              autoFocus
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setRejectModal({ open: false, id: null, reason: '' })}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={actionLoading[rejectModal.id]}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50"
-              >
-                {actionLoading[rejectModal.id] ? 'Rejecting...' : 'Confirm Rejection'}
-              </button>
+                        <div className="cp-wr-detail-grid" style={{
+                          marginTop: 8,
+                          display: 'grid',
+                          gridTemplateColumns: '1fr',
+                          gap: '4px 32px',
+                          fontSize: 14,
+                        }}>
+                          <div>
+                            <span style={{ color: '#6b7280' }}>User: </span>
+                            <span style={{ fontWeight: 500, color: '#111827' }}>{wr.user_full_name || wr.user_email}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: '#6b7280' }}>Account: </span>
+                            <span style={{ fontFamily: 'monospace', color: '#111827' }}>{wr.cp_account_number}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: '#6b7280' }}>Amount: </span>
+                            <span style={{ fontWeight: 700, color: '#111827', fontSize: 16 }}>
+                              ${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div>
+                            <span style={{ color: '#6b7280' }}>Requested: </span>
+                            <span style={{ color: '#111827' }}>
+                              {wr.created_at ? format(new Date(wr.created_at), 'MMM dd, yyyy HH:mm') : '—'}
+                            </span>
+                          </div>
+                          {wr.bank_name && (
+                            <div>
+                              <span style={{ color: '#6b7280' }}>Bank: </span>
+                              <span style={{ color: '#111827' }}>{wr.bank_name}</span>
+                              {wr.account_number && <span style={{ color: '#9ca3af' }}> — ****{wr.account_number.slice(-4)}</span>}
+                            </div>
+                          )}
+                          {wr.description && (
+                            <div>
+                              <span style={{ color: '#6b7280' }}>Description: </span>
+                              <span style={{ color: '#111827' }}>{wr.description}</span>
+                            </div>
+                          )}
+                          {wr.rejection_reason && (
+                            <div style={{
+                              gridColumn: '1 / -1',
+                              marginTop: 4,
+                              padding: '8px 12px',
+                              backgroundColor: '#fef2f2',
+                              border: '1px solid #fecaca',
+                              borderRadius: 8,
+                            }}>
+                              <span style={{ fontSize: 12, fontWeight: 500, color: '#b91c1c' }}>Rejected: </span>
+                              <span style={{ fontSize: 14, color: '#dc2626' }}>{wr.rejection_reason}</span>
+                              {wr.reviewer_email && (
+                                <span style={{ fontSize: 12, color: '#f87171', marginLeft: 8 }}>by {wr.reviewer_email}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action buttons (only for pending) */}
+                      {wr.status === 'pending' && (
+                        <div className="cp-wr-actions" style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                          <button
+                            onClick={() => handleApprove(wr.id)}
+                            disabled={actionLoading[wr.id]}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#059669',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 500,
+                              cursor: actionLoading[wr.id] ? 'not-allowed' : 'pointer',
+                              opacity: actionLoading[wr.id] ? 0.5 : 1,
+                              transition: 'background-color 0.15s, opacity 0.15s',
+                            }}
+                          >
+                            {actionLoading[wr.id] ? 'Processing...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => openReject(wr.id)}
+                            disabled={actionLoading[wr.id]}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#dc2626',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 500,
+                              cursor: actionLoading[wr.id] ? 'not-allowed' : 'pointer',
+                              opacity: actionLoading[wr.id] ? 0.5 : 1,
+                              transition: 'background-color 0.15s, opacity 0.15s',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
+
+          {/* Rejection modal */}
+          {rejectModal.open && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0,0,0,0.4)',
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: 12,
+                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                width: '100%',
+                maxWidth: 440,
+                margin: '0 16px',
+                padding: 24,
+              }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111827', margin: '0 0 16px' }}>Reject Withdrawal Request</h3>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>Rejection reason *</label>
+                <textarea
+                  value={rejectModal.reason}
+                  onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
+                  rows={3}
+                  placeholder="Provide a reason for rejecting this request..."
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    marginBottom: 16,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.boxShadow = '0 0 0 2px rgba(220,38,38,0.2)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#d1d5db';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  <button
+                    onClick={() => setRejectModal({ open: false, id: null, reason: '' })}
+                    style={{
+                      padding: '8px 16px',
+                      color: '#374151',
+                      backgroundColor: '#f3f4f6',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    disabled={actionLoading[rejectModal.id]}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: actionLoading[rejectModal.id] ? 'not-allowed' : 'pointer',
+                      opacity: actionLoading[rejectModal.id] ? 0.5 : 1,
+                      transition: 'background-color 0.15s, opacity 0.15s',
+                    }}
+                  >
+                    {actionLoading[rejectModal.id] ? 'Rejecting...' : 'Confirm Rejection'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

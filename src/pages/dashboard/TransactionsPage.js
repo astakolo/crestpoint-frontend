@@ -162,9 +162,9 @@ export default function TransactionsPage() {
     <>
       <Navbar />
       <div style={styles.page}>
-        <div style={styles.container}>
+        <div style={styles.container} className="cp-page-container">
           {/* Page Header */}
-          <div style={styles.pageHeader}>
+          <div style={styles.pageHeader} className="cp-page-header">
             <h1 style={styles.pageTitle}>Transaction History</h1>
             {totalCount > 0 && (
               <span style={styles.countBadge}>
@@ -182,7 +182,7 @@ export default function TransactionsPage() {
 
           {/* Filters Bar */}
           <div style={styles.filtersBar}>
-            <div style={styles.filtersRow}>
+            <div style={styles.filtersRow} className="cp-filters-grid">
               {/* Account Filter */}
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Account</label>
@@ -254,7 +254,7 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            <div style={styles.filterActions}>
+            <div style={styles.filterActions} className="cp-filter-actions">
               <Button onClick={handleApplyFilters} size="sm">
                 Apply Filters
               </Button>
@@ -266,7 +266,7 @@ export default function TransactionsPage() {
 
           {/* Active Filters Display */}
           {Object.keys(appliedFilters).length > 0 && (
-            <div style={styles.activeFilters}>
+            <div style={styles.activeFilters} className="cp-active-filters">
               <span style={styles.activeFiltersLabel}>Active filters:</span>
               {appliedFilters.account && (
                 <span style={styles.filterTag}>

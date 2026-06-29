@@ -104,7 +104,7 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <div style={styles.page}>
-        <div style={styles.container}>
+        <div style={styles.container} className="cp-page-container">
           {/* Error Alert */}
           {error && (
             <div style={{ marginBottom: '24px' }}>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Row */}
-          <div style={styles.statsGrid}>
+          <div style={styles.statsGrid} className="cp-stats-grid">
             <StatCard
               title="Total Balance"
               value={formatCurrency(totalBalance)}
@@ -174,7 +174,7 @@ export default function DashboardPage() {
 
           {/* Accounts Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader}>
+            <div style={styles.sectionHeader} className="cp-section-header">
               <h2 style={styles.sectionTitle}>Your Accounts</h2>
               <Link to="/accounts" style={styles.viewAllLink}>
                 View All Accounts →
@@ -202,7 +202,7 @@ export default function DashboardPage() {
 
           {/* Recent Transactions Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader}>
+            <div style={styles.sectionHeader} className="cp-section-header">
               <h2 style={styles.sectionTitle}>Recent Transactions</h2>
               <Link to="/transactions" style={styles.viewAllLink}>
                 View All Transactions →

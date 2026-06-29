@@ -197,7 +197,7 @@ export default function AccountsPage() {
               Choose the type of account you want to create. You can have multiple accounts of different types.
             </p>
 
-            <div style={styles.typeGrid}>
+            <div className="cp-type-grid" style={styles.typeGrid}>
               {Object.entries(ACCOUNT_TYPE_OPTIONS).map(([key, config]) => (
                 <div
                   key={key}
