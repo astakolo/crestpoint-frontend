@@ -30,8 +30,8 @@ function formatBalance(balance, currency = 'USD') {
 export default function AccountCard({ account = {}, onClick, selected = false }) {
   const accountType = (account.account_type || account.type || 'default').toLowerCase();
   const typeConfig = ACCOUNT_TYPE_CONFIG[accountType] || ACCOUNT_TYPE_CONFIG.default;
-  const isFrozen = (account.status || '').toLowerCase() === 'frozen';
-  const isActive = !isFrozen && (account.status || '').toLowerCase() !== 'inactive';
+  const isFrozen = account.is_frozen === true;
+  const isActive = account.is_active === true && !isFrozen;
 
   return (
     <div

@@ -312,12 +312,12 @@ export default function AccountsPage() {
                         fontSize: '13px',
                         fontWeight: 500,
                         backgroundColor:
-                          (accountDetail.status || '').toLowerCase() === 'active' ? '#ecfdf5'
-                          : (accountDetail.status || '').toLowerCase() === 'frozen' ? '#eff6ff'
+                          accountDetail.is_active && !accountDetail.is_frozen ? '#ecfdf5'
+                          : accountDetail.is_frozen ? '#eff6ff'
                           : '#f3f4f6',
                         color:
-                          (accountDetail.status || '').toLowerCase() === 'active' ? '#059669'
-                          : (accountDetail.status || '').toLowerCase() === 'frozen' ? '#1a56db'
+                          accountDetail.is_active && !accountDetail.is_frozen ? '#059669'
+                          : accountDetail.is_frozen ? '#1a56db'
                           : '#6b7280',
                       }}>
                         <span style={{
@@ -325,11 +325,13 @@ export default function AccountsPage() {
                           height: '6px',
                           borderRadius: '50%',
                           backgroundColor:
-                            (accountDetail.status || '').toLowerCase() === 'active' ? '#059669'
-                            : (accountDetail.status || '').toLowerCase() === 'frozen' ? '#1a56db'
+                            accountDetail.is_active && !accountDetail.is_frozen ? '#059669'
+                            : accountDetail.is_frozen ? '#1a56db'
                             : '#9ca3af',
                         }} />
-                        {(accountDetail.status || '').charAt(0).toUpperCase() + (accountDetail.status || '').slice(1)}
+                        {accountDetail.is_active && !accountDetail.is_frozen ? 'Active'
+                          : accountDetail.is_frozen ? 'Frozen'
+                          : 'Inactive'}
                       </span>
                     </span>
                   </div>

@@ -124,7 +124,7 @@ export default function LoansPage() {
     try {
       const data = await accountService.getAccounts();
       const accs = Array.isArray(data) ? data : data?.results || data?.data || [];
-      setAccounts(accs.filter((a) => (a.status || '').toLowerCase() === 'active'));
+      setAccounts(accs.filter((a) => a.is_active && !a.is_frozen));
     } catch {
       // Non-critical
     }
