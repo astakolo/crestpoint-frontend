@@ -193,3 +193,48 @@
     gap: 4px !important;
   }
 }
+
+/* ── Navbar: hide desktop nav on tablet too (768px) ── */
+@media (max-width: 768px) {
+  .cp-desktop-nav {
+    display: none !important;
+  }
+  .cp-mobile-burger {
+    display: flex !important;
+  }
+}
+
+/* ── Accounts grid: 2-col on tablet, 1-col on mobile ── */
+@media (max-width: 640px) {
+  .cp-accounts-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Name row in registration form ── */
+@media (max-width: 480px) {
+  .cp-name-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+}
+
+/* ── Tab bars that should scroll on mobile ── */
+@media (max-width: 640px) {
+  [class*="tab"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+  }
+  [class*="tab"] button {
+    flex-shrink: 0;
+  }
+}
+
+/* ── Ensure all pages have proper mobile spacing ── */
+@media (max-width: 640px) {
+  .cp-page-container {
+    padding-top: 16px !important;
+    padding-bottom: 24px !important;
+  }
+}

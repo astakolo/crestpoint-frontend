@@ -61,14 +61,23 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Try to refresh the token
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh/`,
-          {},
-          { withCredentials: true }
+        // Try to refresh the token — send refresh token in body as fallback
+        // when httpOnly cookies may not be available (e.g., cross-origin)
+        let refreshBody = {};
+        // Import the stored refresh token from authService
+        // We use a small module-level variable trick to avoid circular imports
+        if (api._refreshToken) {
+          refreshBody = { refresh: api._refreshToken };
+        }
+        const response = await api.post(
+          '/auth/refresh/',
+          refreshBody,
         );
-        const { access } = response.data;
+        const { access, refresh } = response.data;
         api.setAuthToken(access);
+        if (refresh) {
+          api._refreshToken = refresh; // Update stored token (rotation)
+        }
         processQueue(null, access);
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);

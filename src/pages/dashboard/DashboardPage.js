@@ -29,7 +29,7 @@ export default function DashboardPage() {
     try {
       const [accountsData, transactionsData, unreadData] = await Promise.allSettled([
         accountService.getAccounts(),
-        transactionService.getHistory({ page: 1, page_size: 50 }),
+        transactionService.getHistory({ page: 1, page_size: 100 }),
         notificationService.getUnreadCount(),
       ]);
 
@@ -75,10 +75,10 @@ export default function DashboardPage() {
 
   const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
   const income = transactions
-    .filter(t => ['deposit', 'transfer_in'].includes(t.transaction_type) && t.status === 'completed')
+    .filter(t => ['deposit', 'transfer_in', 'credit', 'incoming'].includes((t.transaction_type || t.type || '').toLowerCase()) && (t.status || '').toLowerCase() === 'completed')
     .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   const expense = transactions
-    .filter(t => ['withdrawal', 'transfer_out', 'payment'].includes(t.transaction_type) && t.status === 'completed')
+    .filter(t => ['withdrawal', 'transfer_out', 'payment', 'debit', 'outgoing'].includes((t.transaction_type || t.type || '').toLowerCase()) && (t.status || '').toLowerCase() === 'completed')
     .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
 
   const handleQuickAction = useCallback((actionId) => {
@@ -203,7 +203,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             {accounts.length > 0 ? (
-              <div style={styles.accountsGrid}>
+              <div style={styles.accountsGrid} className="cp-accounts-grid">
                 {accounts.slice(0, 4).map((account) => (
                   <AccountCard
                     key={account.id || account.account_number}
@@ -231,7 +231,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <TransactionTable
-              transactions={transactions.slice(0, 5)}
+              transactions={transactions.slice(0, 50)}
               onViewDetails={(tx) => navigate('/transactions')}
             />
           </div>

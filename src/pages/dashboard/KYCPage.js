@@ -5,12 +5,11 @@ import Navbar from '../../components/common/Navbar';
 import Button from '../../components/common/Button';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Alert from '../../components/common/Alert';
-import { formatDate, KYC_STATUS } from '../../utils/constants';
 
 const DOCUMENT_TYPES = [
   { value: 'passport', label: 'Passport' },
   { value: 'national_id', label: 'National ID' },
-  { value: 'driver_license', label: "Driver's License" },
+  { value: 'drivers_license', label: "Driver's License" },
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

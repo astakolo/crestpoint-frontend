@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import transactionService from '../../services/transactionService';
 import Navbar from '../../components/common/Navbar';
+import AdminLayout from '../../components/admin/AdminLayout';
 import Button from '../../components/common/Button';
 import InputField from '../../components/common/InputField';
 
@@ -87,9 +88,11 @@ export default function AdminWithdrawalsPage() {
     return (
       <>
         <Navbar />
-        <div style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={spinnerStyle} />
-        </div>
+        <AdminLayout>
+          <div style={{ minHeight: 'calc(100vh - 64px - 3px)', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={spinnerStyle} />
+          </div>
+        </AdminLayout>
       </>
     );
   }
@@ -97,8 +100,9 @@ export default function AdminWithdrawalsPage() {
   return (
     <>
       <Navbar />
-      <div className="cp-page-container" style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
+      <AdminLayout>
+        <div className="cp-page-container" style={{ minHeight: 'calc(100vh - 64px - 3px)', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', padding: '32px 24px' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
@@ -517,6 +521,7 @@ export default function AdminWithdrawalsPage() {
 
         </div>
       </div>
+      </AdminLayout>
     </>
   );
 }
