@@ -21,6 +21,12 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminTransactionsPage from './pages/admin/AdminTransactionsPage';
 import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage';
+import LoansPage from './pages/dashboard/LoansPage';
+import InvestmentsPage from './pages/dashboard/InvestmentsPage';
+import CheckDepositPage from './pages/dashboard/CheckDepositPage';
+import CryptoDepositPage from './pages/dashboard/CryptoDepositPage';
+import BillsPage from './pages/dashboard/BillsPage';
+import CardsPage from './pages/dashboard/CardsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Protected route wrapper
@@ -158,6 +164,55 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/loans"
+        element={
+          <ProtectedRoute>
+            <LoansPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/investments"
+        element={
+          <ProtectedRoute>
+            <InvestmentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/check-deposit"
+        element={
+          <ProtectedRoute>
+            <CheckDepositPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/crypto-deposit"
+        element={
+          <ProtectedRoute>
+            <CryptoDepositPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bills"
+        element={
+          <ProtectedRoute>
+            <BillsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cards"
+        element={
+          <ProtectedRoute>
+            <CardsPage />
           </ProtectedRoute>
         }
       />

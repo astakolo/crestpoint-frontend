@@ -9,6 +9,12 @@ const NAV_LINKS = [
   { to: '/accounts', label: 'Accounts' },
   { to: '/transactions', label: 'Transactions' },
   { to: '/transfer', label: 'Transfer' },
+  { to: '/cards', label: 'Cards' },
+  { to: '/loans', label: 'Loans' },
+  { to: '/investments', label: 'Investments' },
+  { to: '/bills', label: 'Bills' },
+  { to: '/crypto-deposit', label: 'Crypto' },
+  { to: '/check-deposit', label: 'Check Deposit' },
   { to: '/withdrawal-requests', label: 'Withdrawals' },
   { to: '/notifications', label: 'Notifications', hasBadge: true },
 ];

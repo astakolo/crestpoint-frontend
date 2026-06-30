@@ -29,7 +29,7 @@ export default function DashboardPage() {
     try {
       const [accountsData, transactionsData, unreadData] = await Promise.allSettled([
         accountService.getAccounts(),
-        transactionService.getHistory({ page: 1, page_size: 5 }),
+        transactionService.getHistory({ page: 1, page_size: 50 }),
         notificationService.getUnreadCount(),
       ]);
 
@@ -74,13 +74,23 @@ export default function DashboardPage() {
   });
 
   const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+  const income = transactions
+    .filter(t => ['deposit', 'transfer_in'].includes(t.transaction_type) && t.status === 'completed')
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const expense = transactions
+    .filter(t => ['withdrawal', 'transfer_out', 'payment'].includes(t.transaction_type) && t.status === 'completed')
+    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
 
   const handleQuickAction = useCallback((actionId) => {
     const routes = {
       transfer: '/transfer',
       deposit: '/deposit-withdraw',
       withdraw: '/deposit-withdraw',
-      'pay-bills': '/transfer',
+      'pay-bills': '/bills',
+      cards: '/cards',
+      loans: '/loans',
+      investments: '/investments',
+      crypto: '/crypto-deposit',
     };
     if (routes[actionId]) {
       navigate(routes[actionId]);
@@ -134,23 +144,35 @@ export default function DashboardPage() {
               }
             />
             <StatCard
-              title="Total Accounts"
+              title="Income"
+              value={formatCurrency(income)}
+              subtitle="Total earnings"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
+                </svg>
+              }
+            />
+            <StatCard
+              title="Expenses"
+              value={formatCurrency(expense)}
+              subtitle="Total spent"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                  <polyline points="17 18 23 18 23 12" />
+                </svg>
+              }
+            />
+            <StatCard
+              title="Accounts"
               value={accounts.length}
               subtitle="Active accounts"
               icon={
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <line x1="2" y1="9" x2="22" y2="9" />
-                </svg>
-              }
-            />
-            <StatCard
-              title="Recent Transactions"
-              value={transactions.length}
-              subtitle="Last 5 transactions"
-              icon={
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
               }
             />
@@ -209,7 +231,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <TransactionTable
-              transactions={transactions}
+              transactions={transactions.slice(0, 5)}
               onViewDetails={(tx) => navigate('/transactions')}
             />
           </div>
@@ -254,8 +276,8 @@ const styles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    gap: '16px',
     marginBottom: '32px',
   },
   section: {
