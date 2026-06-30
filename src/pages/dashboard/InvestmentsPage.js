@@ -1,8 +1,71 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Component } from 'react';
 import Navbar from '../../components/common/Navbar';
 import investmentService from '../../services/investmentService';
 import accountService from '../../services/accountService';
 import toast from 'react-hot-toast';
+
+// ErrorBoundary to catch runtime crashes and show feedback instead of white page
+class InvestmentErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('[InvestmentsPage]', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f9fafb',
+          fontFamily: 'Inter, -apple-system, sans-serif',
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            border: '1px solid #e5e7eb',
+            padding: '48px 32px',
+            textAlign: 'center',
+            maxWidth: '420px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: '0 0 8px 0' }}>
+              Something went wrong
+            </h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px 0' }}>
+              {this.state.error?.message || 'An unexpected error occurred loading this page.'}
+            </p>
+            <button
+              onClick={() => { this.setState({ hasError: false, error: null }); }}
+              style={{
+                padding: '10px 24px',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#ffffff',
+                backgroundColor: '#1a56db',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontFamily: 'Inter, -apple-system, sans-serif',
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const TABS = [
   { key: 'market', label: 'Market' },
@@ -29,7 +92,7 @@ function formatDate(dateString) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export default function InvestmentsPage() {
+function InvestmentsPage() {
   const [activeTab, setActiveTab] = useState('market');
 
   // Market state
@@ -89,11 +152,14 @@ export default function InvestmentsPage() {
   // ── Market Tab ──────────────────────────────────────────────
   const fetchStocks = useCallback(async () => {
     setMarketLoading(true);
+    setMarketError('');
     try {
       const data = await investmentService.getMarketStocks();
       setStocks(Array.isArray(data) ? data : data?.results || data?.stocks || []);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to load market data');
+      const msg = err?.response?.data?.detail || 'Failed to load market data';
+      setMarketError(msg);
+      toast.error(msg);
     } finally {
       setMarketLoading(false);
     }
@@ -158,6 +224,7 @@ export default function InvestmentsPage() {
   // ── Portfolio Tab ───────────────────────────────────────────
   const fetchPortfolio = useCallback(async () => {
     setPortfolioLoading(true);
+    setPortfolioError('');
     try {
       const data = await investmentService.getPortfolio();
       const holdingsList = Array.isArray(data) ? data : data?.holdings || data?.results || [];
@@ -168,7 +235,9 @@ export default function InvestmentsPage() {
         total_pnl: data?.total_pnl || holdingsList.reduce((s, h) => s + (h.pnl || 0), 0),
       });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to load portfolio');
+      const msg = err?.response?.data?.detail || 'Failed to load portfolio';
+      setPortfolioError(msg);
+      toast.error(msg);
     } finally {
       setPortfolioLoading(false);
     }
@@ -221,11 +290,14 @@ export default function InvestmentsPage() {
   // ── Investment Account Tab ──────────────────────────────────
   const fetchInvestmentAccount = useCallback(async () => {
     setAccountLoading(true);
+    setAccountError('');
     try {
       const data = await investmentService.getInvestmentAccount();
       setInvestmentAccount(data);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to load investment account');
+      const msg = err?.response?.data?.detail || 'Failed to load investment account';
+      setAccountError(msg);
+      toast.error(msg);
     } finally {
       setAccountLoading(false);
     }
@@ -302,9 +374,19 @@ export default function InvestmentsPage() {
     ? ((portfolioSummary.total_pnl / portfolioSummary.total_invested) * 100)
     : 0;
 
+  // Track API errors for display
+  const [marketError, setMarketError] = useState('');
+  const [portfolioError, setPortfolioError] = useState('');
+  const [accountError, setAccountError] = useState('');
+
   return (
     <>
       <Navbar />
+      <style>{`
+        @keyframes cp-inv-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
@@ -354,6 +436,13 @@ export default function InvestmentsPage() {
                 <div style={styles.loadingContainer}>
                   <div style={styles.spinner} />
                   <span style={styles.loadingText}>Loading market data...</span>
+                </div>
+              ) : marketError ? (
+                <div style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>⚠️</div>
+                  <h3 style={styles.emptyTitle}>Error Loading Market</h3>
+                  <p style={styles.emptyDescription}>{marketError}</p>
+                  <button onClick={fetchStocks} style={styles.retryBtn}>Retry</button>
                 </div>
               ) : filteredStocks.length === 0 ? (
                 <div style={styles.emptyState}>
@@ -414,6 +503,13 @@ export default function InvestmentsPage() {
                 <div style={styles.loadingContainer}>
                   <div style={styles.spinner} />
                   <span style={styles.loadingText}>Loading portfolio...</span>
+                </div>
+              ) : portfolioError ? (
+                <div style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>⚠️</div>
+                  <h3 style={styles.emptyTitle}>Error Loading Portfolio</h3>
+                  <p style={styles.emptyDescription}>{portfolioError}</p>
+                  <button onClick={fetchPortfolio} style={styles.retryBtn}>Retry</button>
                 </div>
               ) : (
                 <>
@@ -529,6 +625,13 @@ export default function InvestmentsPage() {
                 <div style={styles.loadingContainer}>
                   <div style={styles.spinner} />
                   <span style={styles.loadingText}>Loading account...</span>
+                </div>
+              ) : accountError ? (
+                <div style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>⚠️</div>
+                  <h3 style={styles.emptyTitle}>Error Loading Account</h3>
+                  <p style={styles.emptyDescription}>{accountError}</p>
+                  <button onClick={() => { fetchInvestmentAccount(); fetchInvestmentTransactions(); }} style={styles.retryBtn}>Retry</button>
                 </div>
               ) : (
                 <>
@@ -844,6 +947,14 @@ export default function InvestmentsPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function InvestmentsPageWithErrorBoundary() {
+  return (
+    <InvestmentErrorBoundary>
+      <InvestmentsPage />
+    </InvestmentErrorBoundary>
   );
 }
 
@@ -1182,7 +1293,7 @@ const styles = {
     border: '3px solid #e5e7eb',
     borderTopColor: '#1a56db',
     borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
+    animation: 'cp-inv-spin 0.8s linear infinite',
   },
   loadingText: {
     fontSize: '14px',
@@ -1213,6 +1324,19 @@ const styles = {
     fontSize: '14px',
     color: '#6b7280',
     margin: 0,
+    marginBottom: '16px',
+  },
+  retryBtn: {
+    marginTop: '8px',
+    padding: '10px 24px',
+    fontSize: '14px',
+    fontWeight: 600,
+    color: '#ffffff',
+    backgroundColor: '#1a56db',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: 'Inter, -apple-system, sans-serif',
   },
 
   // Modal

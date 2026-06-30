@@ -7,6 +7,14 @@ import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
 import { validateEmail } from '../../utils/helpers';
 
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = local.slice(0, 2);
+  const masked = '****';
+  return `${visible}${masked}@${domain}`;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -228,7 +236,7 @@ export default function LoginPage() {
           <>
             <h2 style={styles.heading}>Verify your identity</h2>
             <p style={styles.subheading}>
-              We sent a code to <strong style={{ color: '#111827' }}>{email}</strong>
+              We sent a code to <strong style={{ color: '#111827' }}>{maskEmail(email)}</strong>
             </p>
 
             <form onSubmit={handleSubmit} style={styles.form}>

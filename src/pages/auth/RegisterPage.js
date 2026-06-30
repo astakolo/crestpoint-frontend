@@ -7,6 +7,14 @@ import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
 import { validateEmail, validatePassword } from '../../utils/helpers';
 
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = local.slice(0, 2);
+  const masked = '****';
+  return `${visible}${masked}@${domain}`;
+}
+
 function getPasswordStrength(password) {
   const checks = {
     length: password.length >= 8,
@@ -514,7 +522,7 @@ export default function RegisterPage() {
           <>
             <h2 style={styles.heading}>Verify your email</h2>
             <p style={styles.subheading}>
-              We sent a code to <strong style={{ color: '#111827' }}>{formData.email}</strong>
+              We sent a code to <strong style={{ color: '#111827' }}>{maskEmail(formData.email)}</strong>
             </p>
 
             <form onSubmit={handleFinalSubmit} style={styles.form}>

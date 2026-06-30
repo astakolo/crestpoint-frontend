@@ -2,7 +2,7 @@ import api from './api';
 
 const authService = {
   async login(email, password) {
-    const response = await api.post('/auth/login/', { email, password });
+    const response = await api.post('/auth/login/', { email, password }, { withCredentials: true });
     const { access, refresh, user } = response.data;
     api.setAuthToken(access);
     return { access, refresh, user };
@@ -15,9 +15,11 @@ const authService = {
 
   async logout() {
     try {
-      await api.post('/auth/logout/');
+      // MUST send cookies so the backend can blacklist the refresh token
+      // and delete the httpOnly cookies from the response
+      await api.post('/auth/logout/', {}, { withCredentials: true });
     } catch (e) {
-      // Ignore logout errors
+      // Ignore logout errors — still clear local state
     } finally {
       api.clearAuthToken();
     }
