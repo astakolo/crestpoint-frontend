@@ -27,8 +27,6 @@ function formatDate(dateStr) {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
   } catch {
     return dateStr;
@@ -91,7 +89,7 @@ function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
     >
       <td style={styles.td}>
         <span style={{ fontWeight: 500, color: '#111827' }}>
-          {formatDate(transaction.created_at)}
+          {formatDate(transaction.date || transaction.created_at)}
         </span>
       </td>
       <td style={{ ...styles.td, color: '#6b7280', fontSize: '13px' }}>
@@ -108,7 +106,7 @@ function TransactionRow({ transaction, onViewDetails, showAccount, isEven }) {
           color: '#374151',
           textTransform: 'capitalize',
         }}>
-          {(txType || '—').replace(/_/g, ' ')}
+          {txType ? txType.replace(/_/g, ' ') : '—'}
         </span>
       </td>
       <td style={{ ...styles.td, textAlign: 'right' }}>
@@ -157,10 +155,10 @@ function TransactionCard({ transaction, onViewDetails, showAccount }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827', marginBottom: '2px', textTransform: 'capitalize' }}>
-            {(txType || 'Transaction').replace(/_/g, ' ')}
+            {txType ? txType.replace(/_/g, ' ') : 'Transaction'}
           </div>
           <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-            {formatDate(transaction.created_at)}
+            {formatDate(transaction.date || transaction.created_at)}
           </div>
         </div>
         <span style={{ fontWeight: 600, color: amountColor, fontSize: '16px' }}>

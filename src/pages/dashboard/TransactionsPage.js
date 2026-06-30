@@ -91,11 +91,11 @@ export default function TransactionsPage() {
 
   const handleApplyFilters = () => {
     const cleaned = {};
-    if (filters.account) cleaned.account = filters.account;
-    if (filters.type) cleaned.type = filters.type;
+    if (filters.account) cleaned.account_id = filters.account;
+    if (filters.type) cleaned.transaction_type = filters.type;
     if (filters.status) cleaned.status = filters.status;
-    if (filters.date_from) cleaned.date_from = filters.date_from;
-    if (filters.date_to) cleaned.date_to = filters.date_to;
+    if (filters.date_from) cleaned.from_date = filters.date_from;
+    if (filters.date_to) cleaned.to_date = filters.date_to;
     setAppliedFilters(cleaned);
     setCurrentPage(1);
   };
@@ -162,9 +162,9 @@ export default function TransactionsPage() {
     <>
       <Navbar />
       <div style={styles.page}>
-        <div style={styles.container} className="cp-page-container">
+        <div style={styles.container}>
           {/* Page Header */}
-          <div style={styles.pageHeader} className="cp-page-header">
+          <div style={styles.pageHeader}>
             <h1 style={styles.pageTitle}>Transaction History</h1>
             {totalCount > 0 && (
               <span style={styles.countBadge}>
@@ -182,7 +182,7 @@ export default function TransactionsPage() {
 
           {/* Filters Bar */}
           <div style={styles.filtersBar}>
-            <div style={styles.filtersRow} className="cp-filters-grid">
+            <div style={styles.filtersRow}>
               {/* Account Filter */}
               <div style={styles.filterGroup}>
                 <label style={styles.filterLabel}>Account</label>
@@ -254,7 +254,7 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            <div style={styles.filterActions} className="cp-filter-actions">
+            <div style={styles.filterActions}>
               <Button onClick={handleApplyFilters} size="sm">
                 Apply Filters
               </Button>
@@ -266,7 +266,7 @@ export default function TransactionsPage() {
 
           {/* Active Filters Display */}
           {Object.keys(appliedFilters).length > 0 && (
-            <div style={styles.activeFilters} className="cp-active-filters">
+            <div style={styles.activeFilters}>
               <span style={styles.activeFiltersLabel}>Active filters:</span>
               {appliedFilters.account && (
                 <span style={styles.filterTag}>
@@ -375,8 +375,8 @@ export default function TransactionsPage() {
                 {/* Details Grid */}
                 <div style={styles.detailGrid}>
                   <DetailRow label="Reference" value={txDetail.reference || txDetail.id || 'N/A'} />
-                  <DetailRow label="Type" value={(txDetail.transaction_type || txDetail.type || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
-                  <DetailRow label="Date" value={formatDate(txDetail.created_at)} />
+                  <DetailRow label="Type" value={((txDetail.transaction_type || txDetail.type) || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
+                  <DetailRow label="Date" value={formatDate(txDetail.date || txDetail.created_at)} />
                   {txDetail.description && (
                     <DetailRow label="Description" value={txDetail.description} />
                   )}

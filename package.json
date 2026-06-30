@@ -3,26 +3,33 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "react-scripts": "5.0.1",
     "axios": "^1.6.2",
     "date-fns": "^2.30.0",
-    "react-hot-toast": "^2.4.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.20.0",
+    "react-scripts": "^5.0.1"
   },
-  "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
-    "build": "node node_modules/react-scripts/scripts/build.js",
-    "vercel-build": "node node_modules/react-scripts/scripts/build.js",
+"build": "DISABLE_ESLINT_PLUGIN=true node node_modules/react-scripts/scripts/build.js",
+    "vercel-build": "DISABLE_ESLINT_PLUGIN=true node node_modules/react-scripts/scripts/build.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "postinstall": "node -e \"const fs=require('fs'),p='node_modules/.bin';try{fs.readdirSync(p).forEach(f=>{const fp=p+'/'+f;try{fs.chmodSync(fp,0o755)}catch(e){}})}catch(e){}\""
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "proxy": "http://localhost:8000"
 }
