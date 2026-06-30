@@ -6,13 +6,18 @@ const billService = {
     return response.data;
   },
 
+  async getSavedBillers() {
+    const response = await api.get('/bills/saved/');
+    return response.data;
+  },
+
   async saveBiller(data) {
-    const response = await api.post('/bills/billers/', data);
+    const response = await api.post('/bills/saved/save/', data);
     return response.data;
   },
 
   async deleteBiller(id) {
-    const response = await api.delete(`/bills/billers/${id}/`);
+    const response = await api.delete(`/bills/saved/${id}/`);
     return response.data;
   },
 

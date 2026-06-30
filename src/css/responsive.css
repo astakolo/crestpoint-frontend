@@ -195,7 +195,7 @@
 }
 
 /* ── Navbar: hide desktop nav on tablet too (768px) ── */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .cp-desktop-nav {
     display: none !important;
   }

@@ -17,7 +17,7 @@ const CRYPTO_OPTIONS = [
   { value: 'USDT', label: 'Tether (USDT)', icon: '₮' },
 ];
 
-const TABS = ['Wallet', 'Deposit History'];
+const TABS = ['Wallet', 'Deposit', 'Withdraw', 'Deposit History'];
 
 const STATUS_CONFIG = {
   completed: { label: 'Completed', bg: '#ecfdf5', color: '#059669' },
@@ -51,6 +51,12 @@ export default function CryptoDepositPage() {
 
   const screenshotRef = useRef(null);
 
+  // Withdrawal state
+  const [withdrawCrypto, setWithdrawCrypto] = useState('BTC');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawDest, setWithdrawDest] = useState('');
+  const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
+
   // Fetch wallet
   const fetchWallet = useCallback(async () => {
     setLoadingWallet(true);
@@ -81,7 +87,7 @@ export default function CryptoDepositPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'Wallet') fetchWallet();
+    if (activeTab === 'Wallet' || activeTab === 'Withdraw') fetchWallet();
     if (activeTab === 'Deposit History') fetchTransactions();
   }, [activeTab, fetchWallet, fetchTransactions]);
 
@@ -154,6 +160,38 @@ export default function CryptoDepositPage() {
     }
   };
 
+  // Submit withdrawal
+  const handleWithdraw = async (e) => {
+    e.preventDefault();
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+      toast.error('Please enter a valid crypto amount');
+      return;
+    }
+    if (!withdrawDest.trim()) {
+      toast.error('Please enter a destination wallet address');
+      return;
+    }
+
+    setSubmittingWithdraw(true);
+    try {
+      await cryptoService.createWithdrawal({
+        crypto_currency: withdrawCrypto,
+        amount: parseFloat(withdrawAmount),
+        destination_address: withdrawDest.trim(),
+      });
+      toast.success('Crypto withdrawal submitted successfully');
+      setWithdrawAmount('');
+      setWithdrawDest('');
+      fetchWallet();
+      fetchTransactions();
+    } catch (err) {
+      const msg = err?.response?.data?.detail || err?.response?.data?.error || err?.message || 'Withdrawal failed. Please try again.';
+      toast.error(msg);
+    } finally {
+      setSubmittingWithdraw(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
     const cfg = STATUS_CONFIG[s] || { label: status || 'Unknown', bg: '#f9fafb', color: '#6b7280' };
@@ -191,9 +229,9 @@ export default function CryptoDepositPage() {
       <div style={s.page}>
         <div style={s.container}>
           {/* Page Header */}
-          <h1 style={s.pageTitle}>Crypto Deposits</h1>
+          <h1 style={s.pageTitle}>Crypto</h1>
           <p style={s.pageDescription}>
-            Deposit cryptocurrency into your CrestPoint Credit account.
+            Deposit and withdraw cryptocurrency from your CrestPoint Credit account.
           </p>
 
           {/* Tabs */}
@@ -261,12 +299,15 @@ export default function CryptoDepositPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
 
-              {/* New Deposit Form */}
-              <div style={s.card}>
-                <h2 style={s.sectionTitle}>New Deposit</h2>
+          {/* Tab: Deposit */}
+          {activeTab === 'Deposit' && (
+            <div style={s.card}>
+              <h2 style={s.sectionTitle}>New Deposit</h2>
 
-                <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit}>
                   {/* Crypto Currency Selection */}
                   <div style={{ marginBottom: '16px' }}>
                     <label style={s.label}>Crypto Currency</label>
@@ -424,6 +465,98 @@ export default function CryptoDepositPage() {
                   </div>
                 </form>
               </div>
+          )}
+
+          {/* Tab: Withdraw */}
+          {activeTab === 'Withdraw' && (
+            <div style={s.card}>
+              {loadingWallet ? (
+                <LoadingSpinner size="sm" text="Loading..." />
+              ) : (
+                <form onSubmit={handleWithdraw} style={s.form}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={s.label}>Select Cryptocurrency</label>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      {CRYPTO_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setWithdrawCrypto(opt.value)}
+                          style={{
+                            flex: 1,
+                            minWidth: '120px',
+                            padding: '14px 16px',
+                            borderRadius: '10px',
+                            border: withdrawCrypto === opt.value ? '2px solid #1a56db' : '1px solid #e5e7eb',
+                            backgroundColor: withdrawCrypto === opt.value ? '#eff6ff' : '#ffffff',
+                            color: withdrawCrypto === opt.value ? '#1a56db' : '#374151',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontFamily: 'Inter, -apple-system, sans-serif',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span style={{ fontSize: '20px' }}>{opt.icon}</span>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={s.fieldGroup}>
+                    <label style={s.label}>Amount ({withdrawCrypto})</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      style={s.input}
+                      required
+                    />
+                    {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
+                      <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0 0' }}>
+                        Estimated USD value: ${(parseFloat(withdrawAmount) * CRYPTO_RATES[withdrawCrypto]).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={s.fieldGroup}>
+                    <label style={s.label}>Destination Wallet Address</label>
+                    <input
+                      type="text"
+                      value={withdrawDest}
+                      onChange={(e) => setWithdrawDest(e.target.value)}
+                      style={s.input}
+                      placeholder="0x..."
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingWithdraw}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      backgroundColor: submittingWithdraw ? '#9ca3af' : '#1a56db',
+                      color: '#ffffff',
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      cursor: submittingWithdraw ? 'not-allowed' : 'pointer',
+                      fontFamily: 'Inter, -apple-system, sans-serif',
+                    }}
+                  >
+                    {submittingWithdraw ? 'Submitting...' : 'Submit Withdrawal'}
+                  </button>
+                </form>
+              )}
             </div>
           )}
 

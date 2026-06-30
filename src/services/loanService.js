@@ -22,17 +22,17 @@ const loanService = {
   },
 
   async getLoans() {
-    const response = await api.get('/loans/my-loans/');
+    const response = await api.get('/loans/');
     return response.data;
   },
 
   async getLoan(id) {
-    const response = await api.get(`/loans/my-loans/${id}/`);
+    const response = await api.get(`/loans/${id}/`);
     return response.data;
   },
 
   async repayLoan(loanId, data) {
-    const response = await api.post(`/loans/my-loans/${loanId}/repay/`, data);
+    const response = await api.post(`/loans/${loanId}/repay/`, data);
     return response.data;
   },
 };

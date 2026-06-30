@@ -33,6 +33,38 @@ const ACTIONS = [
     color: '#7c3aed',
     hoverBg: '#f5f3ff',
   },
+  {
+    id: 'cards',
+    label: 'Virtual Cards',
+    icon: '💳',
+    description: 'Manage your virtual cards',
+    color: '#0891b2',
+    hoverBg: '#ecfeff',
+  },
+  {
+    id: 'loans',
+    label: 'Loans',
+    icon: '🏦',
+    description: 'Apply and manage loans',
+    color: '#be185d',
+    hoverBg: '#fdf2f8',
+  },
+  {
+    id: 'investments',
+    label: 'Investments',
+    icon: '📈',
+    description: 'Trade stocks and grow wealth',
+    color: '#059669',
+    hoverBg: '#ecfdf5',
+  },
+  {
+    id: 'crypto',
+    label: 'Crypto Deposit',
+    icon: '₿',
+    description: 'Deposit via cryptocurrency',
+    color: '#f59e0b',
+    hoverBg: '#fffbeb',
+  },
 ];
 
 function ActionCard({ action, onClick }) {
@@ -101,6 +133,11 @@ export default function QuickActions({ onAction }) {
         ))}
       </div>
       <style>{`
+        @media (max-width: 1024px) {
+          .lc-quick-actions-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
         @media (max-width: 768px) {
           .lc-quick-actions-grid {
             grid-template-columns: repeat(2, 1fr) !important;

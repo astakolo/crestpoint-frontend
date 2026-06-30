@@ -1,19 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials } from '../../utils/helpers';
 import notificationService from '../../services/notificationService';
 
-const NAV_LINKS = [
-  { to: '/', label: 'Dashboard' },
+// Primary nav links shown directly in the top bar
+const PRIMARY_LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
   { to: '/accounts', label: 'Accounts' },
   { to: '/transactions', label: 'Transactions' },
   { to: '/transfer', label: 'Transfer' },
-  { to: '/notifications', label: 'Notifications', hasBadge: true },
+  { to: '/cards', label: 'Cards' },
+  { to: '/loans', label: 'Loans' },
+  { to: '/investments', label: 'Investments' },
+];
+
+// Secondary links shown in a "More" dropdown on desktop, and inline on mobile
+const MORE_LINKS = [
+  { to: '/bills', label: 'Bills' },
+  { to: '/crypto-deposit', label: 'Crypto' },
+  { to: '/check-deposit', label: 'Check Deposit' },
+  { to: '/withdrawal-requests', label: 'Withdrawals' },
+  { to: '/kyc', label: 'KYC' },
 ];
 
 const ADMIN_LINKS = [
-  { to: '/admin', label: 'Admin Dashboard' },
+  { to: '/admin', label: 'Admin Panel' },
+  { to: '/admin/users', label: 'Manage Users' },
+  { to: '/admin/transactions', label: 'Admin Transactions' },
+  { to: '/admin/withdrawals', label: 'Admin Withdrawals' },
 ];
 
 const linkStyle = {
@@ -45,7 +60,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const moreRef = useRef(null);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -67,7 +84,21 @@ export default function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
+    setMoreOpen(false);
   }, [location.pathname]);
+
+  // Close "More" dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setMoreOpen(false);
+      }
+    }
+    if (moreOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [moreOpen]);
 
   const handleLogout = async () => {
     try {
@@ -79,9 +110,12 @@ export default function Navbar() {
   };
 
   const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
+    if (path === '/dashboard') return location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
   };
+
+  // Check if any "More" or Admin link is active
+  const isMoreActive = [...MORE_LINKS, ...(user?.role === 'admin' ? ADMIN_LINKS : [])].some((l) => isActive(l.to));
 
   const renderNavLink = (navLink) => {
     const active = isActive(navLink.to);
@@ -151,7 +185,7 @@ export default function Navbar() {
         }}>
           {/* Logo */}
           <Link
-            to="/"
+            to={isAuthenticated ? "/dashboard" : "/"}
             style={{
               fontSize: '20px',
               fontWeight: 700,
@@ -164,7 +198,7 @@ export default function Navbar() {
             CrestPoint Credit
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Primary links */}
           {isAuthenticated && (
             <div style={{
               display: 'flex',
@@ -173,8 +207,161 @@ export default function Navbar() {
             }}
             className="cp-desktop-nav"
             >
-              {NAV_LINKS.map(renderNavLink)}
-              {user?.role === 'admin' && ADMIN_LINKS.map(renderNavLink)}
+              {PRIMARY_LINKS.map(renderNavLink)}
+
+              {/* Notifications link with badge */}
+              {renderNavLink({ to: '/notifications', label: 'Notifications', hasBadge: true })}
+
+              {/* More dropdown for secondary + admin links */}
+              <div ref={moreRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  style={{
+                    ...linkStyle,
+                    ...(isMoreActive ? activeLinkStyle : {}),
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isMoreActive) {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                      e.currentTarget.style.color = '#111827';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMoreActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                    }
+                  }}
+                >
+                  More
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{
+                    transition: 'transform 0.2s',
+                    transform: moreOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {/* Dropdown menu */}
+                {moreOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginTop: '6px',
+                    minWidth: '200px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)',
+                    border: '1px solid #e5e7eb',
+                    padding: '6px',
+                    zIndex: 1000,
+                    animation: 'cp-fadeIn 0.15s ease-out',
+                  }}>
+                    {MORE_LINKS.map((navLink) => {
+                      const active = isActive(navLink.to);
+                      return (
+                        <Link
+                          key={navLink.to}
+                          to={navLink.to}
+                          onClick={() => setMoreOpen(false)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '10px 14px',
+                            borderRadius: '7px',
+                            fontSize: '14px',
+                            fontWeight: active ? 600 : 500,
+                            color: active ? '#1a56db' : '#374151',
+                            textDecoration: 'none',
+                            backgroundColor: active ? '#eff6ff' : 'transparent',
+                            transition: 'background-color 0.1s, color 0.1s',
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!active) {
+                              e.currentTarget.style.backgroundColor = '#f3f4f6';
+                              e.currentTarget.style.color = '#111827';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!active) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = '#374151';
+                            }
+                          }}
+                        >
+                          {navLink.label}
+                        </Link>
+                      );
+                    })}
+
+                    {/* Admin section in dropdown */}
+                    {user?.role === 'admin' && (
+                      <>
+                        <div style={{
+                          height: '1px',
+                          backgroundColor: '#e5e7eb',
+                          margin: '6px 8px',
+                        }} />
+                        <div style={{
+                          padding: '6px 14px 4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          color: '#9ca3af',
+                        }}>
+                          Admin
+                        </div>
+                        {ADMIN_LINKS.map((navLink) => {
+                          const active = isActive(navLink.to);
+                          return (
+                            <Link
+                              key={navLink.to}
+                              to={navLink.to}
+                              onClick={() => setMoreOpen(false)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                padding: '10px 14px',
+                                borderRadius: '7px',
+                                fontSize: '14px',
+                                fontWeight: active ? 600 : 500,
+                                color: active ? '#1a56db' : '#374151',
+                                textDecoration: 'none',
+                                backgroundColor: active ? '#eff6ff' : 'transparent',
+                                transition: 'background-color 0.1s, color 0.1s',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!active) {
+                                  e.currentTarget.style.backgroundColor = '#f3f4f6';
+                                  e.currentTarget.style.color = '#111827';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!active) {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                  e.currentTarget.style.color = '#374151';
+                                }
+                              }}
+                            >
+                              {navLink.label}
+                            </Link>
+                          );
+                        })}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -431,7 +618,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          {NAV_LINKS.map(renderNavLink)}
+          {/* All links on mobile (both primary and more) */}
+          {PRIMARY_LINKS.map(renderNavLink)}
+          {renderNavLink({ to: '/notifications', label: 'Notifications', hasBadge: true })}
+          {MORE_LINKS.map(renderNavLink)}
           {user?.role === 'admin' && ADMIN_LINKS.map(renderNavLink)}
 
           <div style={{

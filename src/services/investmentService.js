@@ -6,8 +6,9 @@ const investmentService = {
     return response.data;
   },
 
-  async getStock(symbol) {
-    const response = await api.get(`/investments/market/${symbol}/`);
+  async getStock(pk) {
+    // Backend expects integer pk, not symbol string
+    const response = await api.get(`/investments/market/${pk}/`);
     return response.data;
   },
 

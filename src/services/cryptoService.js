@@ -7,7 +7,12 @@ const cryptoService = {
   },
 
   async createDeposit(data) {
-    const response = await api.post('/crypto/deposits/', data);
+    const response = await api.post('/crypto/deposit/', data);
+    return response.data;
+  },
+
+  async createWithdrawal(data) {
+    const response = await api.post('/crypto/withdraw/', data);
     return response.data;
   },
 
