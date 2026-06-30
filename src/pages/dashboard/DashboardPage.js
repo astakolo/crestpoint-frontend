@@ -29,7 +29,7 @@ export default function DashboardPage() {
     try {
       const [accountsData, transactionsData, unreadData] = await Promise.allSettled([
         accountService.getAccounts(),
-        transactionService.getHistory({ page: 1, page_size: 100 }),
+        transactionService.getHistory({ page: 1, page_size: 5 }),
         notificationService.getUnreadCount(),
       ]);
 
@@ -74,23 +74,13 @@ export default function DashboardPage() {
   });
 
   const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
-  const income = transactions
-    .filter(t => ['deposit', 'transfer_in', 'credit', 'incoming'].includes((t.transaction_type || t.type || '').toLowerCase()) && (t.status || '').toLowerCase() === 'completed')
-    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-  const expense = transactions
-    .filter(t => ['withdrawal', 'transfer_out', 'payment', 'debit', 'outgoing'].includes((t.transaction_type || t.type || '').toLowerCase()) && (t.status || '').toLowerCase() === 'completed')
-    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
 
   const handleQuickAction = useCallback((actionId) => {
     const routes = {
       transfer: '/transfer',
       deposit: '/deposit-withdraw',
       withdraw: '/deposit-withdraw',
-      'pay-bills': '/bills',
-      cards: '/cards',
-      loans: '/loans',
-      investments: '/investments',
-      crypto: '/crypto-deposit',
+      'pay-bills': '/transfer',
     };
     if (routes[actionId]) {
       navigate(routes[actionId]);
@@ -114,7 +104,7 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <div style={styles.page}>
-        <div style={styles.container} className="cp-page-container">
+        <div style={styles.container}>
           {/* Error Alert */}
           {error && (
             <div style={{ marginBottom: '24px' }}>
@@ -131,7 +121,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Row */}
-          <div style={styles.statsGrid} className="cp-stats-grid">
+          <div style={styles.statsGrid}>
             <StatCard
               title="Total Balance"
               value={formatCurrency(totalBalance)}
@@ -144,35 +134,23 @@ export default function DashboardPage() {
               }
             />
             <StatCard
-              title="Income"
-              value={formatCurrency(income)}
-              subtitle="Total earnings"
-              icon={
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                  <polyline points="17 6 23 6 23 12" />
-                </svg>
-              }
-            />
-            <StatCard
-              title="Expenses"
-              value={formatCurrency(expense)}
-              subtitle="Total spent"
-              icon={
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-                  <polyline points="17 18 23 18 23 12" />
-                </svg>
-              }
-            />
-            <StatCard
-              title="Accounts"
+              title="Total Accounts"
               value={accounts.length}
               subtitle="Active accounts"
               icon={
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <line x1="2" y1="9" x2="22" y2="9" />
+                </svg>
+              }
+            />
+            <StatCard
+              title="Recent Transactions"
+              value={transactions.length}
+              subtitle="Last 5 transactions"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
               }
             />
@@ -196,14 +174,14 @@ export default function DashboardPage() {
 
           {/* Accounts Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader} className="cp-section-header">
+            <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>Your Accounts</h2>
               <Link to="/accounts" style={styles.viewAllLink}>
                 View All Accounts →
               </Link>
             </div>
             {accounts.length > 0 ? (
-              <div style={styles.accountsGrid} className="cp-accounts-grid">
+              <div style={styles.accountsGrid}>
                 {accounts.slice(0, 4).map((account) => (
                   <AccountCard
                     key={account.id || account.account_number}
@@ -224,14 +202,14 @@ export default function DashboardPage() {
 
           {/* Recent Transactions Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader} className="cp-section-header">
+            <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>Recent Transactions</h2>
               <Link to="/transactions" style={styles.viewAllLink}>
                 View All Transactions →
               </Link>
             </div>
             <TransactionTable
-              transactions={transactions.slice(0, 50)}
+              transactions={transactions}
               onViewDetails={(tx) => navigate('/transactions')}
             />
           </div>
@@ -276,8 +254,8 @@ const styles = {
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
-    gap: '16px',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '20px',
     marginBottom: '32px',
   },
   section: {

@@ -5,7 +5,7 @@ const ADMIN_TABS = [
   { path: '/admin', label: 'Dashboard', icon: '\u2302' },
   { path: '/admin/users', label: 'Users', icon: '\u263A' },
   { path: '/admin/transactions', label: 'Transactions', icon: '\u2194' },
-  { path: '/admin/withdrawals', label: 'Withdrawals', icon: '\u2193' },
+  { path: '/admin/settings', label: 'Settings', icon: '\u2699', disabled: true },
 ];
 
 export default function AdminLayout({ children }) {

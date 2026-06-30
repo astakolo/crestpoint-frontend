@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import authService from '../services/authService';
 
@@ -25,6 +25,11 @@ export function AuthProvider({ children }) {
     return response;
   }, [login]);
 
+  const logout = useCallback(async () => {
+    await authService.logout();
+    setUser(null);
+  }, []);
+
   const refreshAccessToken = useCallback(async () => {
     try {
       const access = await authService.refreshToken();
@@ -42,81 +47,17 @@ export function AuthProvider({ children }) {
       api.setAuthToken(access);
       const profile = await authService.getProfile();
       setUser(profile);
-      return true;
     } catch (error) {
       setUser(null);
-      return false;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Proactive token refresh: every 12 minutes (before the 15-min JWT expiry)
-  const refreshTimerRef = useRef(null);
-
-  const startRefreshTimer = useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearInterval(refreshTimerRef.current);
-    }
-    refreshTimerRef.current = setInterval(async () => {
-      try {
-        const access = await authService.refreshToken();
-        api.setAuthToken(access);
-      } catch (error) {
-        // Silent refresh failed — let the next request's 401 interceptor handle it
-      }
-    }, 12 * 60 * 1000); // 12 minutes
-  }, []);
-
-  const stopRefreshTimer = useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearInterval(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
-  }, []);
-
-  // Initial auth check and start refresh timer when authenticated
   useEffect(() => {
-    checkAuth().then((success) => {
-      if (success) {
-        startRefreshTimer();
-      }
-    });
-    return () => {
-      stopRefreshTimer();
-    };
-    // eslint-disable-next-line
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Start/stop refresh timer when authentication state changes
-  useEffect(() => {
-    if (user) {
-      startRefreshTimer();
-    } else {
-      stopRefreshTimer();
-    }
-    return () => {
-      stopRefreshTimer();
-    };
-  }, [user, startRefreshTimer, stopRefreshTimer]);
-
-  // Listen for auth:logout events dispatched by the api.js 401 interceptor
-  useEffect(() => {
-    const handleAuthLogout = () => {
-      setUser(null);
-      stopRefreshTimer();
-    };
-    window.addEventListener('auth:logout', handleAuthLogout);
-    return () => {
-      window.removeEventListener('auth:logout', handleAuthLogout);
-    };
-  }, [stopRefreshTimer]);
-
-  const logout = useCallback(async () => {
-    stopRefreshTimer();
-    await authService.logout();
-    setUser(null);
-  }, [stopRefreshTimer]);
 
   const value = {
     user,

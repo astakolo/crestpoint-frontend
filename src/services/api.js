@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Required: backend stores refresh token in httpOnly cookies
+  withCredentials: false, // JWT in Authorization header, no cookies needed
 });
 
 // Request interceptor to add auth token
@@ -23,21 +23,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Mutex to prevent multiple concurrent token refresh calls
-let isRefreshing = false;
-let failedQueue = [];
-
-function processQueue(error, token = null) {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-}
-
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
@@ -45,50 +30,23 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // If already refreshing, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }).catch((err) => {
-          return Promise.reject(err);
-        });
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        // Try to refresh the token — send refresh token in body as fallback
-        // when httpOnly cookies may not be available (e.g., cross-origin)
-        let refreshBody = {};
-        // Import the stored refresh token from authService
-        // We use a small module-level variable trick to avoid circular imports
-        if (api._refreshToken) {
-          refreshBody = { refresh: api._refreshToken };
-        }
-        const response = await api.post(
-          '/auth/refresh/',
-          refreshBody,
+        // Try to refresh the token
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh/`,
+          {},
+          { withCredentials: true }
         );
-        const { access, refresh } = response.data;
+        const { access } = response.data;
         api.setAuthToken(access);
-        if (refresh) {
-          api._refreshToken = refresh; // Update stored token (rotation)
-        }
-        processQueue(null, access);
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        // Refresh failed — clear stale token and notify AuthContext
-        api.clearAuthToken();
-        window.dispatchEvent(new CustomEvent('auth:logout'));
+        // Refresh failed, redirect to login
+        window.location.href = '/login';
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

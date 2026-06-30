@@ -201,7 +201,7 @@ export default function RegisterPage() {
         phone: formData.phone || undefined,
         password: formData.password,
       });
-      navigate('/dashboard', {
+      navigate('/login', {
         state: { registrationSuccess: true },
       });
     } catch (error) {
