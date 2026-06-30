@@ -54,6 +54,26 @@ const authService = {
     const response = await api.post('/auth/password-reset/confirm/', data);
     return response.data;
   },
+
+  async sendLoginOTP(email) {
+    const response = await api.post('/auth/otp/send/', { email });
+    return response.data;
+  },
+
+  async verifyLoginOTP(email, otp) {
+    const response = await api.post('/auth/otp/verify/', { email, otp });
+    return response.data;
+  },
+
+  async sendRegisterOTP(email) {
+    const response = await api.post('/auth/otp/register/send/', { email });
+    return response.data;
+  },
+
+  async verifyRegisterOTP(email, otp) {
+    const response = await api.post('/auth/otp/register/verify/', { email, otp });
+    return response.data;
+  },
 };
 
 export default authService;

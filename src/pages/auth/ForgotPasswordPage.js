@@ -94,7 +94,6 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="you@example.com"
                 error={emailError}
                 required
                 icon={

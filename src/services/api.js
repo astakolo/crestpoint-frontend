@@ -44,8 +44,8 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
-        window.location.href = '/login';
+        // Refresh failed — dispatch event so AuthContext can clean up and React Router handles redirect
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         return Promise.reject(refreshError);
       }
     }

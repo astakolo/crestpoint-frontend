@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
@@ -15,9 +15,9 @@ function getPasswordStrength(password) {
     number: /[0-9]/.test(password),
   };
   const met = Object.values(checks).filter(Boolean).length;
-  let color = '#dc2626'; // red
-  if (met >= 4) color = '#059669'; // green
-  else if (met >= 2) color = '#d97706'; // yellow
+  let color = '#dc2626';
+  if (met >= 4) color = '#059669';
+  else if (met >= 2) color = '#d97706';
   return { checks, met, color };
 }
 
@@ -37,14 +37,30 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [serverError, setServerError] = useState('');
+
+  // OTP step
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [sendingOTP, setSendingOTP] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  const inputRefs = useRef([]);
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const strength = getPasswordStrength(formData.password);
 
@@ -113,7 +129,6 @@ export default function RegisterPage() {
             delete newErrors.password;
           }
         }
-        // Also re-validate confirm password if it was touched
         if (touched.confirmPassword && formData.confirmPassword) {
           if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
@@ -186,14 +201,90 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ── Send OTP (Step 1 → Step 2) ──
+  const handleSendOTP = async (e) => {
+    e?.preventDefault();
     setServerError('');
 
     if (!validateForm()) return;
 
+    setSendingOTP(true);
+    try {
+      await authService.sendRegisterOTP(formData.email);
+      setOtpSent(true);
+      setResendCooldown(60);
+    } catch (error) {
+      const msg =
+        error.response?.data?.email?.[0] ||
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        'Failed to send verification code. Please try again.';
+      setServerError(msg);
+    } finally {
+      setSendingOTP(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0) return;
+    setOtpError('');
+    setSendingOTP(true);
+    try {
+      await authService.sendRegisterOTP(formData.email);
+      setResendCooldown(60);
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) inputRefs.current[0].focus();
+    } catch (error) {
+      setOtpError('Failed to resend code. Please try again.');
+    } finally {
+      setSendingOTP(false);
+    }
+  };
+
+  // ── OTP handlers ──
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    setOtpError('');
+    if (value && index < 5 && inputRefs.current[index + 1]) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      setOtp(pasted.split(''));
+      inputRefs.current[5]?.focus();
+    }
+  };
+
+  // ── Final submit (verify OTP + register) ──
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    setServerError('');
+    setOtpError('');
+
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      setOtpError('Please enter the 6-digit code');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      // Verify OTP first
+      await authService.verifyRegisterOTP(formData.email, otpCode);
+      // Then register
       await register({
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -205,16 +296,27 @@ export default function RegisterPage() {
         state: { registrationSuccess: true },
       });
     } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        error.response?.data?.email?.[0] ||
-        error.response?.data?.non_field_errors?.[0] ||
-        'Registration failed. Please try again.';
-      setServerError(message);
+      if (error.response?.data?.otp) {
+        setOtpError(error.response.data.otp);
+      } else {
+        const message =
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          error.response?.data?.email?.[0] ||
+          error.response?.data?.non_field_errors?.[0] ||
+          'Registration failed. Please try again.';
+        setServerError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBackToForm = () => {
+    setOtpSent(false);
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    setServerError('');
   };
 
   if (authLoading) {
@@ -233,14 +335,9 @@ export default function RegisterPage() {
       <div style={styles.card}>
         {/* Branding */}
         <div style={styles.branding}>
-          <span style={styles.logo}>🏦</span>
-          <h1 style={styles.brandName}>CrestPoint Credit</h1>
+          <span style={styles.logo}>CrestPoint Credit</span>
           <p style={styles.brandSubtext}>Digital Banking</p>
         </div>
-
-        {/* Heading */}
-        <h2 style={styles.heading}>Create your account</h2>
-        <p style={styles.subheading}>Start banking with us in minutes</p>
 
         {/* Alert */}
         {serverError && (
@@ -249,170 +346,228 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Name row */}
-          <div style={styles.nameRow}>
-            <div style={{ flex: 1 }}>
+        {!otpSent ? (
+          /* ── Step 1: Registration Form ── */
+          <>
+            <h2 style={styles.heading}>Create your account</h2>
+            <p style={styles.subheading}>Start banking with us in minutes</p>
+
+            <form onSubmit={handleSendOTP} style={styles.form}>
+              {/* Name row */}
+              <div style={styles.nameRow}>
+                <div style={{ flex: 1 }}>
+                  <InputField
+                    label="First Name"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.firstName ? errors.firstName : ''}
+                    required
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <InputField
+                    label="Last Name"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.lastName ? errors.lastName : ''}
+                    required
+                  />
+                </div>
+              </div>
+
               <InputField
-                label="First Name"
-                name="firstName"
-                value={formData.firstName}
+                label="Email Address"
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="John"
-                error={touched.firstName ? errors.firstName : ''}
+                error={touched.email ? errors.email : ''}
                 required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                }
               />
-            </div>
-            <div style={{ flex: 1 }}>
+
               <InputField
-                label="Last Name"
-                name="lastName"
-                value={formData.lastName}
+                label="Phone Number"
+                type="tel"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="Doe"
-                error={touched.lastName ? errors.lastName : ''}
-                required
+                error={touched.phone ? errors.phone : ''}
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                }
               />
-            </div>
-          </div>
 
-          <InputField
-            label="Email Address"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="you@example.com"
-            error={touched.email ? errors.email : ''}
-            required
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-              </svg>
-            }
-          />
+              <InputField
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.password ? errors.password : ''}
+                required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                }
+              />
 
-          <InputField
-            label="Phone Number"
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="+1 (555) 000-0000"
-            error={touched.phone ? errors.phone : ''}
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-            }
-          />
-
-          <InputField
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Create a strong password"
-            error={touched.password ? errors.password : ''}
-            required
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            }
-          />
-
-          {/* Password strength indicator */}
-          {formData.password && (
-            <div style={styles.strengthContainer}>
-              <div style={styles.strengthChecks}>
-                {[
-                  { key: 'length', label: '8+ characters', met: strength.checks.length },
-                  { key: 'uppercase', label: 'Uppercase letter', met: strength.checks.uppercase },
-                  { key: 'lowercase', label: 'Lowercase letter', met: strength.checks.lowercase },
-                  { key: 'number', label: 'Number', met: strength.checks.number },
-                ].map((req) => (
-                  <div key={req.key} style={styles.strengthCheck}>
-                    <span style={{
-                      ...styles.checkIcon,
-                      color: req.met ? strength.color : '#d1d5db',
-                    }}>
-                      {req.met ? '✓' : '○'}
-                    </span>
-                    <span style={{
-                      ...styles.checkLabel,
-                      color: req.met ? '#111827' : '#9ca3af',
-                    }}>
-                      {req.label}
-                    </span>
+              {/* Password strength indicator */}
+              {formData.password && (
+                <div style={styles.strengthContainer}>
+                  <div style={styles.strengthChecks}>
+                    {[
+                      { key: 'length', label: '8+ characters', met: strength.checks.length },
+                      { key: 'uppercase', label: 'Uppercase letter', met: strength.checks.uppercase },
+                      { key: 'lowercase', label: 'Lowercase letter', met: strength.checks.lowercase },
+                      { key: 'number', label: 'Number', met: strength.checks.number },
+                    ].map((req) => (
+                      <div key={req.key} style={styles.strengthCheck}>
+                        <span style={{
+                          ...styles.checkIcon,
+                          color: req.met ? strength.color : '#d1d5db',
+                        }}>
+                          {req.met ? '\u2713' : '\u25CB'}
+                        </span>
+                        <span style={{
+                          ...styles.checkLabel,
+                          color: req.met ? '#111827' : '#9ca3af',
+                        }}>
+                          {req.label}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div style={styles.strengthBarBg}>
-                <div
-                  style={{
-                    ...styles.strengthBar,
-                    width: `${(strength.met / 4) * 100}%`,
-                    backgroundColor: strength.color,
-                  }}
-                />
-              </div>
-            </div>
-          )}
+                  <div style={styles.strengthBarBg}>
+                    <div
+                      style={{
+                        ...styles.strengthBar,
+                        width: `${(strength.met / 4) * 100}%`,
+                        backgroundColor: strength.color,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
-          <InputField
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Confirm your password"
-            error={touched.confirmPassword ? errors.confirmPassword : ''}
-            required
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            }
-          />
-
-          {/* Terms */}
-          <div style={styles.termsRow}>
-            <label style={styles.termsLabel}>
-              <input
-                type="checkbox"
-                name="agreeTerms"
-                checked={formData.agreeTerms}
+              <InputField
+                label="Confirm Password"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
                 onChange={handleChange}
-                style={styles.checkbox}
+                onBlur={handleBlur}
+                error={touched.confirmPassword ? errors.confirmPassword : ''}
+                required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                }
               />
-              <span style={styles.termsText}>
-                I agree to the{' '}
-                <span style={styles.termsLink}>Terms of Service</span>
-                {' '}and{' '}
-                <span style={styles.termsLink}>Privacy Policy</span>
-              </span>
-            </label>
-            {errors.agreeTerms && (
-              <span style={styles.termsError}>{errors.agreeTerms}</span>
-            )}
-          </div>
 
-          {/* Submit */}
-          <Button type="submit" fullWidth loading={isSubmitting} size="lg">
-            Create Account
-          </Button>
-        </form>
+              {/* Terms */}
+              <div style={styles.termsRow}>
+                <label style={styles.termsLabel}>
+                  <input
+                    type="checkbox"
+                    name="agreeTerms"
+                    checked={formData.agreeTerms}
+                    onChange={handleChange}
+                    style={styles.checkbox}
+                  />
+                  <span style={styles.termsText}>
+                    I agree to the{' '}
+                    <span style={styles.termsLink}>Terms of Service</span>
+                    {' '}and{' '}
+                    <span style={styles.termsLink}>Privacy Policy</span>
+                  </span>
+                </label>
+                {errors.agreeTerms && (
+                  <span style={styles.termsError}>{errors.agreeTerms}</span>
+                )}
+              </div>
+
+              <Button type="submit" fullWidth loading={sendingOTP} size="lg">
+                Continue to Verification
+              </Button>
+            </form>
+          </>
+        ) : (
+          /* ── Step 2: OTP Verification ── */
+          <>
+            <h2 style={styles.heading}>Verify your email</h2>
+            <p style={styles.subheading}>
+              We sent a code to <strong style={{ color: '#111827' }}>{formData.email}</strong>
+            </p>
+
+            <form onSubmit={handleFinalSubmit} style={styles.form}>
+              <div style={styles.otpSection}>
+                <label style={styles.otpLabel}>Verification Code</label>
+                <div style={styles.otpInputs}>
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (inputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={index === 0 ? handleOtpPaste : undefined}
+                      style={{
+                        ...styles.otpInput,
+                        borderColor: otpError ? '#dc2626' : digit ? '#1a56db' : '#d1d5db',
+                      }}
+                    />
+                  ))}
+                </div>
+                {otpError && <span style={styles.fieldError}>{otpError}</span>}
+                <div style={styles.resendRow}>
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={resendCooldown > 0 || sendingOTP}
+                    style={{
+                      ...styles.resendBtn,
+                      color: resendCooldown > 0 ? '#9ca3af' : '#1a56db',
+                      cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend code'}
+                  </button>
+                </div>
+              </div>
+
+              <Button type="submit" fullWidth loading={isSubmitting} size="lg">
+                Create Account
+              </Button>
+
+              <button type="button" onClick={handleBackToForm} style={styles.backBtn}>
+                Go back to edit details
+              </button>
+            </form>
+          </>
+        )}
 
         {/* Login link */}
         <div style={styles.footer}>
@@ -464,7 +619,7 @@ const styles = {
     width: '100%',
     maxWidth: '480px',
     backgroundColor: '#ffffff',
-    borderRadius: '8px',
+    borderRadius: '12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06), 0 20px 25px rgba(0,0,0,0.15)',
     padding: '36px 32px',
     boxSizing: 'border-box',
@@ -474,16 +629,12 @@ const styles = {
     marginBottom: '28px',
   },
   logo: {
-    fontSize: '36px',
-    display: 'block',
-    marginBottom: '6px',
-  },
-  brandName: {
     fontSize: '22px',
     fontWeight: 700,
-    color: '#111827',
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.025em',
+    color: '#1a56db',
+    display: 'block',
+    marginBottom: '4px',
+    letterSpacing: '-0.3px',
   },
   brandSubtext: {
     fontSize: '12px',
@@ -513,6 +664,60 @@ const styles = {
   nameRow: {
     display: 'flex',
     gap: '12px',
+  },
+  otpSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  otpLabel: {
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#374151',
+    marginBottom: '4px',
+  },
+  otpInputs: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+  },
+  otpInput: {
+    width: '44px',
+    height: '52px',
+    textAlign: 'center',
+    fontSize: '20px',
+    fontWeight: 600,
+    border: '2px solid #d1d5db',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.15s',
+    fontFamily: 'Inter, -apple-system, sans-serif',
+  },
+  fieldError: {
+    fontSize: '13px',
+    color: '#dc2626',
+    textAlign: 'center',
+  },
+  resendRow: {
+    textAlign: 'center',
+  },
+  resendBtn: {
+    fontSize: '13px',
+    fontWeight: 500,
+    background: 'none',
+    border: 'none',
+    padding: '4px 0',
+    fontFamily: 'Inter, -apple-system, sans-serif',
+  },
+  backBtn: {
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#6b7280',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px 0',
+    fontFamily: 'Inter, -apple-system, sans-serif',
   },
   strengthContainer: {
     display: 'flex',

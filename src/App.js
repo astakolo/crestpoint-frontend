@@ -35,8 +35,8 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTopColor: '#1a56db', borderRadius: '50%', animation: 'cp-spin 0.6s linear infinite' }} />
       </div>
     );
   }
@@ -58,8 +58,8 @@ const PublicRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTopColor: '#1a56db', borderRadius: '50%', animation: 'cp-spin 0.6s linear infinite' }} />
       </div>
     );
   }
@@ -260,6 +260,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
+      <style>{`
+        @keyframes cp-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
       <AppRoutes />
       <Toaster
         position="top-right"

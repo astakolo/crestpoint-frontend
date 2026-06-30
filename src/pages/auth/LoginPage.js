@@ -1,27 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
 import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
-import { validateEmail, validatePassword } from '../../utils/helpers';
+import { validateEmail } from '../../utils/helpers';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-  const [errors, setErrors] = useState({});
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  // Step 1: Email
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
+  // Step 2: OTP + Password
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [otpError, setOtpError] = useState('');
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const from = location.state?.from?.pathname || '/';
+  const inputRefs = useRef([]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -30,58 +38,134 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, authLoading, navigate, from]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    // Clear field error on change
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleSendOTP = async (e) => {
+    e?.preventDefault();
+    setServerError('');
+    setEmailError('');
+
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      return;
     }
-    if (serverError) {
-      setServerError('');
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setSendingOTP(true);
+    try {
+      await authService.sendLoginOTP(email);
+      setEmailSent(true);
+      setResendCooldown(60);
+    } catch (error) {
+      const msg =
+        error.response?.data?.email?.[0] ||
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        'Failed to send verification code. Please try again.';
+      setServerError(msg);
+    } finally {
+      setSendingOTP(false);
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0) return;
+    setOtpError('');
+    setSendingOTP(true);
+    try {
+      await authService.sendLoginOTP(email);
+      setResendCooldown(60);
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) inputRefs.current[0].focus();
+    } catch (error) {
+      setOtpError('Failed to resend code. Please try again.');
+    } finally {
+      setSendingOTP(false);
     }
+  };
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    setOtpError('');
+
+    // Auto-focus next input
+    if (value && index < 5 && inputRefs.current[index + 1]) {
+      inputRefs.current[index + 1].focus();
     }
+  };
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      const newOtp = pasted.split('');
+      setOtp(newOtp);
+      inputRefs.current[5]?.focus();
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
+    setOtpError('');
+    setPasswordError('');
 
-    if (!validateForm()) return;
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      setOtpError('Please enter the 6-digit code');
+      return;
+    }
+    if (!password) {
+      setPasswordError('Password is required');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await login(formData.email, formData.password);
+      // Verify OTP first
+      await authService.verifyLoginOTP(email, otpCode);
+      // Then login
+      await login(email, password);
       navigate(from, { replace: true });
     } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        error.response?.data?.non_field_errors?.[0] ||
-        'Invalid email or password. Please try again.';
-      setServerError(message);
+      if (error.response?.data?.otp) {
+        setOtpError(error.response.data.otp);
+      } else {
+        const message =
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          error.response?.data?.non_field_errors?.[0] ||
+          'Invalid code or password. Please try again.';
+        setServerError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBackToEmail = () => {
+    setEmailSent(false);
+    setOtp(['', '', '', '', '', '']);
+    setPassword('');
+    setOtpError('');
+    setServerError('');
   };
 
   if (authLoading) {
@@ -100,14 +184,9 @@ export default function LoginPage() {
       <div style={styles.card}>
         {/* Branding */}
         <div style={styles.branding}>
-          <span style={styles.logo}>🏦</span>
-          <h1 style={styles.brandName}>CrestPoint Credit</h1>
+          <span style={styles.logo}>CrestPoint Credit</span>
           <p style={styles.brandSubtext}>Digital Banking</p>
         </div>
-
-        {/* Heading */}
-        <h2 style={styles.heading}>Welcome back</h2>
-        <p style={styles.subheading}>Sign in to your account to continue</p>
 
         {/* Alert */}
         {serverError && (
@@ -116,70 +195,118 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <InputField
-            label="Email Address"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
-            error={errors.email}
-            required
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-              </svg>
-            }
-          />
+        {!emailSent ? (
+          /* ── Step 1: Enter Email ── */
+          <>
+            <h2 style={styles.heading}>Welcome back</h2>
+            <p style={styles.subheading}>Enter your email to receive a verification code</p>
 
-          <InputField
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            error={errors.password}
-            required
-            icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            }
-          />
-
-          {/* Remember me + Forgot password */}
-          <div style={styles.formRow}>
-            <label style={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-                style={styles.checkbox}
+            <form onSubmit={handleSendOTP} style={styles.form}>
+              <InputField
+                label="Email Address"
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                error={emailError}
+                required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                }
               />
-              <span style={styles.checkboxText}>Remember me</span>
-            </label>
 
-            <Link to="/forgot-password" style={styles.forgotLink}>
-              Forgot Password?
-            </Link>
-          </div>
+              <Button type="submit" fullWidth loading={sendingOTP} size="lg">
+                Send Verification Code
+              </Button>
+            </form>
+          </>
+        ) : (
+          /* ── Step 2: OTP + Password ── */
+          <>
+            <h2 style={styles.heading}>Verify your identity</h2>
+            <p style={styles.subheading}>
+              We sent a code to <strong style={{ color: '#111827' }}>{email}</strong>
+            </p>
 
-          {/* Submit */}
-          <Button
-            type="submit"
-            fullWidth
-            loading={isSubmitting}
-            size="lg"
-          >
-            Sign In
-          </Button>
-        </form>
+            <form onSubmit={handleSubmit} style={styles.form}>
+              {/* OTP Input */}
+              <div style={styles.otpSection}>
+                <label style={styles.otpLabel}>Verification Code</label>
+                <div style={styles.otpInputs}>
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (inputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={index === 0 ? handleOtpPaste : undefined}
+                      style={{
+                        ...styles.otpInput,
+                        borderColor: otpError ? '#dc2626' : digit ? '#1a56db' : '#d1d5db',
+                      }}
+                    />
+                  ))}
+                </div>
+                {otpError && <span style={styles.fieldError}>{otpError}</span>}
+                <div style={styles.resendRow}>
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={resendCooldown > 0 || sendingOTP}
+                    style={{
+                      ...styles.resendBtn,
+                      color: resendCooldown > 0 ? '#9ca3af' : '#1a56db',
+                      cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend code'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password */}
+              <InputField
+                label="Password"
+                type="password"
+                name="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+                error={passwordError}
+                required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                }
+              />
+
+              {/* Forgot password */}
+              <div style={{ textAlign: 'right' }}>
+                <Link to="/forgot-password" style={styles.forgotLink}>
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <Button type="submit" fullWidth loading={isSubmitting} size="lg">
+                Sign In
+              </Button>
+
+              <button type="button" onClick={handleBackToEmail} style={styles.backBtn}>
+                Use a different email
+              </button>
+            </form>
+          </>
+        )}
 
         {/* Register link */}
         <div style={styles.footer}>
@@ -241,7 +368,7 @@ const styles = {
     width: '100%',
     maxWidth: '420px',
     backgroundColor: '#ffffff',
-    borderRadius: '8px',
+    borderRadius: '12px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06), 0 20px 25px rgba(0,0,0,0.15)',
     padding: '40px 32px',
     boxSizing: 'border-box',
@@ -251,16 +378,12 @@ const styles = {
     marginBottom: '32px',
   },
   logo: {
-    fontSize: '40px',
-    display: 'block',
-    marginBottom: '8px',
-  },
-  brandName: {
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: 700,
-    color: '#111827',
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.025em',
+    color: '#1a56db',
+    display: 'block',
+    marginBottom: '4px',
+    letterSpacing: '-0.3px',
   },
   brandSubtext: {
     fontSize: '13px',
@@ -287,27 +410,49 @@ const styles = {
     flexDirection: 'column',
     gap: '20px',
   },
-  formRow: {
+  otpSection: {
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  checkboxLabel: {
-    display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
     gap: '8px',
-    cursor: 'pointer',
   },
-  checkbox: {
-    width: '16px',
-    height: '16px',
-    accentColor: '#1a56db',
-    cursor: 'pointer',
-    borderRadius: '4px',
-  },
-  checkboxText: {
+  otpLabel: {
     fontSize: '14px',
-    color: '#6b7280',
+    fontWeight: 500,
+    color: '#374151',
+    marginBottom: '4px',
+  },
+  otpInputs: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+  },
+  otpInput: {
+    width: '44px',
+    height: '52px',
+    textAlign: 'center',
+    fontSize: '20px',
+    fontWeight: 600,
+    border: '2px solid #d1d5db',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.15s',
+    fontFamily: 'Inter, -apple-system, sans-serif',
+  },
+  fieldError: {
+    fontSize: '13px',
+    color: '#dc2626',
+    textAlign: 'center',
+  },
+  resendRow: {
+    textAlign: 'center',
+  },
+  resendBtn: {
+    fontSize: '13px',
+    fontWeight: 500,
+    background: 'none',
+    border: 'none',
+    padding: '4px 0',
+    fontFamily: 'Inter, -apple-system, sans-serif',
   },
   forgotLink: {
     fontSize: '14px',
@@ -315,6 +460,16 @@ const styles = {
     textDecoration: 'none',
     fontWeight: 500,
     cursor: 'pointer',
+  },
+  backBtn: {
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#6b7280',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px 0',
+    fontFamily: 'Inter, -apple-system, sans-serif',
   },
   footer: {
     textAlign: 'center',
