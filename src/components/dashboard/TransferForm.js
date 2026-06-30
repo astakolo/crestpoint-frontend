@@ -63,7 +63,7 @@ export default function TransferForm({ accounts = [], onTransfer, isLoading = fa
         } else if (!/^\d{12}$/.test(formData.recipientAccount.replace(/\s/g, ''))) {
           newErrors.recipientAccount = 'Account number must be 12 digits';
         } else if (formData.sourceAccount && formData.recipientAccount.replace(/\s/g, '') === selectedSource?.account_number?.replace(/\s/g, '')) {
-          newErrors.recipientAccount = 'Cannot transfer to your own account';
+          newErrors.recipientAccount = 'Cannot send money to your own account';
         } else {
           delete newErrors.recipientAccount;
         }
@@ -153,7 +153,7 @@ export default function TransferForm({ accounts = [], onTransfer, isLoading = fa
       {showSummary && selectedSource ? (
         /* Transfer Summary */
         <div style={styles.summaryContainer}>
-          <h3 style={styles.summaryHeading}>Transfer Summary</h3>
+          <h3 style={styles.summaryHeading}>Send Money Summary</h3>
 
           <div style={styles.summaryCard}>
             <div style={styles.summaryRow}>
@@ -211,12 +211,12 @@ export default function TransferForm({ accounts = [], onTransfer, isLoading = fa
               Cancel
             </Button>
             <Button onClick={handleConfirm} loading={isLoading}>
-              Confirm Transfer
+              Confirm & Send
             </Button>
           </div>
         </div>
       ) : (
-        /* Transfer Form */
+        /* Send Money Form */
         <form onSubmit={handleReview} style={styles.form}>
           {/* Source account */}
           <div style={styles.fieldGroup}>
@@ -322,7 +322,7 @@ export default function TransferForm({ accounts = [], onTransfer, isLoading = fa
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="What's this transfer for?"
+            placeholder="What's this for?"
             icon={
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -333,7 +333,7 @@ export default function TransferForm({ accounts = [], onTransfer, isLoading = fa
 
           {/* Submit */}
           <Button type="submit" fullWidth size="lg">
-            Review Transfer
+            Review & Send
           </Button>
         </form>
       )}

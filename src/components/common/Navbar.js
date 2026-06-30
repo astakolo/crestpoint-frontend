@@ -9,7 +9,7 @@ const PRIMARY_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/accounts', label: 'Accounts' },
   { to: '/transactions', label: 'Transactions' },
-  { to: '/transfer', label: 'Transfer' },
+  { to: '/transfer', label: 'Send Money' },
   { to: '/cards', label: 'Cards' },
   { to: '/loans', label: 'Loans' },
   { to: '/investments', label: 'Investments' },

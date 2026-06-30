@@ -1,27 +1,49 @@
 /* CrestPoint Credit – Global Responsive Styles */
 
-/* ── Navbar: padding on small screens ── */
+/* ══════════════════════════════════════════════════
+   BREAKPOINTS USED:
+   • 1100px – tablet landscape (navbar → hamburger)
+   •  900px – tablet portrait
+   •  768px – large phone / small tablet
+   •  640px – phone
+   •  480px – small phone
+   ══════════════════════════════════════════════════ */
+
+/* ── Navbar ── */
 @media (max-width: 640px) {
   nav > div {
-    padding: 0 16px !important;
+    padding: 0 12px !important;
   }
 }
 
-/* ── Page containers ── */
+@media (max-width: 1100px) {
+  .cp-desktop-nav {
+    display: none !important;
+  }
+  .cp-mobile-burger {
+    display: flex !important;
+  }
+}
+
+/* ── PAGE CONTAINERS (all pages use padding: '32px 24px') ── */
 @media (max-width: 640px) {
+  [style*="padding: '32px 24px'"],
+  [style*="padding: 32px 24px"],
   .cp-page-container {
     padding-left: 16px !important;
     padding-right: 16px !important;
+    padding-top: 16px !important;
+    padding-bottom: 24px !important;
   }
 }
 
-/* ── Stats grid: 5-col → 2-col → 1-col ── */
+/* ── DASHBOARD: Stats Grid (4-col → responsive) ── */
 @media (max-width: 1100px) {
   .cp-stats-grid {
     grid-template-columns: repeat(3, 1fr) !important;
   }
 }
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .cp-stats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
@@ -32,7 +54,41 @@
   }
 }
 
-/* ── Filters grid: 5-col → 2-col → 1-col ── */
+/* ── DASHBOARD: Welcome title ── */
+@media (max-width: 480px) {
+  .cp-welcome-title {
+    font-size: 22px !important;
+  }
+}
+
+/* ── QUICK ACTIONS grid ── */
+@media (max-width: 1024px) {
+  .lc-quick-actions-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+@media (max-width: 768px) {
+  .lc-quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 360px) {
+  .lc-quick-actions-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── PAGE HEADERS (flex row → column on mobile) ── */
+@media (max-width: 540px) {
+  .cp-page-header,
+  .cp-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── FILTERS GRID (Transactions page: 5-col → 2 → 1) ── */
 @media (max-width: 900px) {
   .cp-filters-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -54,15 +110,6 @@
   }
 }
 
-/* ── Page header wrap ── */
-@media (max-width: 540px) {
-  .cp-page-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
-  }
-}
-
 /* ── Active filters wrap ── */
 @media (max-width: 540px) {
   .cp-active-filters {
@@ -71,46 +118,30 @@
   }
 }
 
-/* ── Withdrawal request detail grid ── */
-@media (max-width: 540px) {
-  .cp-wr-detail-grid {
+/* ── ACCOUNTS GRID (auto-fill minmax(280-300px) → 1-col on mobile) ── */
+@media (max-width: 640px) {
+  .cp-accounts-grid {
     grid-template-columns: 1fr !important;
   }
 }
 
-/* ── Admin withdrawal action buttons stack ── */
-@media (max-width: 640px) {
-  .cp-wr-actions {
-    flex-direction: row !important;
-  }
-}
-
-/* ── Modal responsive ── */
-@media (max-width: 480px) {
-  .cp-modal-overlay > div {
-    margin: 16px !important;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-}
-
-/* ── Type grid in account creation ── */
+/* ── TYPE GRID (account creation modal: 2-col → 1-col) ── */
 @media (max-width: 480px) {
   .cp-type-grid {
     grid-template-columns: 1fr !important;
   }
 }
 
-/* ── Section header wrap ── */
+/* ── DETAIL ROW (flex-between → column on mobile) ── */
 @media (max-width: 480px) {
-  .cp-section-header {
+  .cp-detail-row {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 8px !important;
+    gap: 4px !important;
   }
 }
 
-/* ── Table horizontal scroll ── */
+/* ── TABLE horizontal scroll ── */
 @media (max-width: 768px) {
   .cp-table-wrapper {
     overflow-x: auto;
@@ -121,15 +152,118 @@
   }
 }
 
-/* ── Quick actions wrap ── */
-@media (max-width: 540px) {
-  .cp-quick-actions {
-    grid-template-columns: repeat(2, 1fr) !important;
+/* ── TAB BARS: scroll on mobile instead of wrap ── */
+@media (max-width: 640px) {
+  .cp-tab-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+    margin-bottom: 16px !important;
+  }
+  .cp-tab-bar button {
+    flex-shrink: 0;
   }
 }
-@media (max-width: 360px) {
-  .cp-quick-actions {
+
+/* ── CARDS PAGE: card grid (minmax 340px → 1-col) ── */
+@media (max-width: 768px) {
+  .cp-cards-grid {
     grid-template-columns: 1fr !important;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .cp-credit-card {
+    max-width: 100% !important;
+  }
+  .cp-card-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── LOANS PAGE: types grid ── */
+@media (max-width: 640px) {
+  .cp-loan-types-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── LOANS PAGE: modal padding ── */
+@media (max-width: 480px) {
+  .cp-loan-modal-grid {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .cp-loan-modal-section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .cp-loan-repay-section {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* ── BILLS PAGE: biller grid ── */
+@media (max-width: 640px) {
+  .cp-biller-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── CRYPTO PAGE: crypto options grid ── */
+@media (max-width: 480px) {
+  .cp-crypto-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── CRYPTO PAGE: wallet address row ── */
+@media (max-width: 480px) {
+  .cp-wallet-address-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── INVESTMENTS PAGE: 2-col layouts ── */
+@media (max-width: 768px) {
+  .cp-invest-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── NOTIFICATIONS: tabs scroll ── */
+@media (max-width: 540px) {
+  .cp-notif-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+  }
+  .cp-notif-tabs button {
+    flex-shrink: 0;
+  }
+}
+
+/* ── NOTIFICATIONS: header wrap ── */
+@media (max-width: 540px) {
+  .cp-notif-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── MODAL responsive ── */
+@media (max-width: 480px) {
+  .cp-modal-overlay > div {
+    margin: 12px !important;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 }
 
@@ -151,25 +285,10 @@
   }
 }
 
-/* ── Notifications tabs scroll ── */
+/* ── Withdrawal request detail grid ── */
 @media (max-width: 540px) {
-  .cp-notif-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-    padding-bottom: 4px;
-  }
-  .cp-notif-tabs button {
-    flex-shrink: 0;
-  }
-}
-
-/* ── Notifications header wrap ── */
-@media (max-width: 540px) {
-  .cp-notif-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
+  .cp-wr-detail-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -185,32 +304,6 @@
   }
 }
 
-/* ── Detail row (account detail modal) ── */
-@media (max-width: 480px) {
-  .cp-detail-row {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 4px !important;
-  }
-}
-
-/* ── Navbar: hide desktop nav on tablet too (768px) ── */
-@media (max-width: 1100px) {
-  .cp-desktop-nav {
-    display: none !important;
-  }
-  .cp-mobile-burger {
-    display: flex !important;
-  }
-}
-
-/* ── Accounts grid: 2-col on tablet, 1-col on mobile ── */
-@media (max-width: 640px) {
-  .cp-accounts-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
 /* ── Name row in registration form ── */
 @media (max-width: 480px) {
   .cp-name-row {
@@ -219,22 +312,51 @@
   }
 }
 
-/* ── Tab bars that should scroll on mobile ── */
+/* ══════════════════════════════════════════════════
+   GLOBAL MOBILE TYPE/SPACING OVERRIDES
+   ══════════════════════════════════════════════════ */
+
+/* Smaller page titles on mobile */
 @media (max-width: 640px) {
-  [class*="tab"] {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-  }
-  [class*="tab"] button {
-    flex-shrink: 0;
+  .cp-page-title {
+    font-size: 20px !important;
   }
 }
 
-/* ── Ensure all pages have proper mobile spacing ── */
+/* Cards shrink padding on mobile */
 @media (max-width: 640px) {
-  .cp-page-container {
-    padding-top: 16px !important;
-    padding-bottom: 24px !important;
+  .cp-card {
+    padding: 16px !important;
+  }
+}
+
+/* Success rows in modals */
+@media (max-width: 480px) {
+  .cp-success-row {
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+  .cp-success-row span:last-child {
+    text-align: left !important;
+  }
+}
+
+/* Detail row (loans, cards, etc) */
+@media (max-width: 480px) {
+  .cp-detail-flex-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+}
+
+/* Form action buttons stack */
+@media (max-width: 480px) {
+  .cp-form-actions {
+    flex-direction: column !important;
+  }
+  .cp-form-actions button,
+  .cp-form-actions a {
+    width: 100%;
   }
 }

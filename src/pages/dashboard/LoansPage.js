@@ -53,7 +53,7 @@ function StatusBadge({ status }) {
 
 function DetailRow({ label, value }) {
   return (
-    <div style={detailRowStyles.row}>
+    <div className="cp-detail-flex-row" style={detailRowStyles.row}>
       <span style={detailRowStyles.label}>{label}</span>
       <span style={detailRowStyles.value}>{value || 'N/A'}</span>
     </div>
@@ -323,12 +323,12 @@ export default function LoansPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <div style={styles.pageHeader}>
-            <h1 style={styles.pageTitle}>Loans</h1>
+          <div className="cp-page-header" style={styles.pageHeader}>
+            <h1 className="cp-page-title" style={styles.pageTitle}>Loans</h1>
           </div>
 
           {/* Tab Bar */}
-          <div style={styles.tabBar}>
+          <div className="cp-tab-bar" style={styles.tabBar}>
             {TABS.map((tab, index) => (
               <button
                 key={tab}
@@ -405,7 +405,7 @@ export default function LoansPage() {
                     </div>
 
                     {/* Loan Info */}
-                    <div style={styles.modalGrid}>
+                    <div className="cp-loan-modal-grid" style={styles.modalGrid}>
                       <DetailRow
                         label="Loan Type"
                         value={
@@ -428,9 +428,9 @@ export default function LoansPage() {
 
                     {/* Repayment History */}
                     {loanDetail.repayments && loanDetail.repayments.length > 0 && (
-                      <div style={styles.repaymentsSection}>
+                      <div className="cp-loan-modal-section" style={styles.repaymentsSection}>
                         <h3 style={styles.repaymentsTitle}>Repayment History</h3>
-                        <div style={styles.repaymentsTableWrap}>
+                        <div className="cp-table-wrapper" style={styles.repaymentsTableWrap}>
                           <table style={styles.repaymentsTable}>
                             <thead>
                               <tr>
@@ -461,7 +461,7 @@ export default function LoansPage() {
 
                     {/* Repay Button / Form */}
                     {loanDetail.status?.toLowerCase() === 'active' && (
-                      <div style={styles.repaySection}>
+                      <div className="cp-loan-repay-section" style={styles.repaySection}>
                         {!showRepayForm ? (
                           <button
                             onClick={() => setShowRepayForm(true)}
@@ -613,6 +613,7 @@ function LoanCard({ loan, onClick }) {
   return (
     <div
       onClick={onClick}
+      className="cp-card"
       style={styles.loanCard}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
@@ -670,7 +671,7 @@ function ApplyLoanTab({ loanTypes, accounts, form, errors, loading, onFieldChang
   };
 
   return (
-    <div style={styles.applyCard}>
+    <div className="cp-card" style={styles.applyCard}>
       <div style={styles.applyCardHeader}>
         <h2 style={styles.applyTitle}>Apply for a Loan</h2>
         <p style={styles.applyDescription}>
@@ -836,11 +837,11 @@ function LoanTypesTab({ loanTypes, loading, onApply }) {
   }
 
   return (
-    <div style={styles.typesGrid}>
+    <div className="cp-loan-types-grid" style={styles.typesGrid}>
       {loanTypes.map((lt) => {
         const typeId = lt.id || lt.name;
         return (
-          <div key={typeId} style={styles.typeCard}>
+          <div key={typeId} className="cp-card" style={styles.typeCard}>
             <div style={styles.typeCardHeader}>
               <h3 style={styles.typeName}>{lt.name || lt.display_name || 'Loan'}</h3>
               <span style={styles.typeRate}>{lt.interest_rate != null ? `${lt.interest_rate}% APR` : ''}</span>

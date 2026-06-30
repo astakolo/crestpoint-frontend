@@ -80,7 +80,11 @@ export default function DashboardPage() {
       transfer: '/transfer',
       deposit: '/deposit-withdraw',
       withdraw: '/deposit-withdraw',
-      'pay-bills': '/transfer',
+      'pay-bills': '/bills',
+      cards: '/cards',
+      loans: '/loans',
+      investments: '/investments',
+      crypto: '/crypto-deposit',
     };
     if (routes[actionId]) {
       navigate(routes[actionId]);
@@ -115,13 +119,13 @@ export default function DashboardPage() {
           {/* Welcome Section */}
           <div style={styles.welcomeSection}>
             <div>
-              <h1 style={styles.welcomeTitle}>Welcome back, {firstName}</h1>
+              <h1 className="cp-welcome-title" style={styles.welcomeTitle}>Welcome back, {firstName}</h1>
               <p style={styles.welcomeDate}>{today}</p>
             </div>
           </div>
 
           {/* Stats Row */}
-          <div style={styles.statsGrid}>
+          <div className="cp-stats-grid" style={styles.statsGrid}>
             <StatCard
               title="Total Balance"
               value={formatCurrency(totalBalance)}
@@ -174,14 +178,14 @@ export default function DashboardPage() {
 
           {/* Accounts Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader}>
+            <div className="cp-section-header" style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>Your Accounts</h2>
               <Link to="/accounts" style={styles.viewAllLink}>
                 View All Accounts →
               </Link>
             </div>
             {accounts.length > 0 ? (
-              <div style={styles.accountsGrid}>
+              <div className="cp-accounts-grid" style={styles.accountsGrid}>
                 {accounts.slice(0, 4).map((account) => (
                   <AccountCard
                     key={account.id || account.account_number}
@@ -202,7 +206,7 @@ export default function DashboardPage() {
 
           {/* Recent Transactions Section */}
           <div style={styles.section}>
-            <div style={styles.sectionHeader}>
+            <div className="cp-section-header" style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>Recent Transactions</h2>
               <Link to="/transactions" style={styles.viewAllLink}>
                 View All Transactions →

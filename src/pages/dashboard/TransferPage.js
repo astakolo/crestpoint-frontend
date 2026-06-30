@@ -28,9 +28,6 @@ export default function TransferPage() {
   const [transferResult, setTransferResult] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Daily limit tracking
-  const [dailyTotal, setDailyTotal] = useState(0);
-
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -48,30 +45,6 @@ export default function TransferPage() {
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
-
-  // Calculate today's transfers for daily limit
-  useEffect(() => {
-    if (accounts.length > 0) {
-      const fetchTodayTransfers = async () => {
-        try {
-          const today = new Date().toISOString().split('T')[0];
-          const data = await transactionService.getHistory({
-            type: 'transfer_out',
-            date_from: today,
-            date_to: today,
-            status: 'completed',
-            page_size: 1000,
-          });
-          const txs = Array.isArray(data) ? data : data?.results || data?.data || [];
-          const total = txs.reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
-          setDailyTotal(total);
-        } catch {
-          // Non-critical
-        }
-      };
-      fetchTodayTransfers();
-    }
-  }, [accounts]);
 
   const handleTransfer = async (transferData) => {
     setTransferring(true);
@@ -98,10 +71,8 @@ export default function TransferPage() {
     setShowSuccessModal(false);
     setTransferResult(null);
     setTransferError('');
+    fetchAccounts();
   };
-
-  const remainingDaily = TRANSFER_LIMITS.daily - dailyTotal;
-  const dailyPercent = Math.min((dailyTotal / TRANSFER_LIMITS.daily) * 100, 100);
 
   if (loading) {
     return (
@@ -135,12 +106,12 @@ export default function TransferPage() {
         <Navbar />
         <div style={styles.page}>
           <div style={styles.container}>
-            <h1 style={styles.pageTitle}>Transfer Money</h1>
+            <h1 className="cp-page-title" style={styles.pageTitle}>Send Money</h1>
             <div style={styles.emptyState}>
               <div style={styles.emptyIcon}>💳</div>
               <h3 style={styles.emptyTitle}>No Active Accounts</h3>
               <p style={styles.emptyDescription}>
-                You need at least one active account to make transfers.
+                You need at least one active account to send money.
               </p>
             </div>
           </div>
@@ -155,12 +126,12 @@ export default function TransferPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <h1 style={styles.pageTitle}>Transfer Money</h1>
+          <h1 className="cp-page-title" style={styles.pageTitle}>Send Money</h1>
           <p style={styles.pageDescription}>
-            Send money to other CrestPoint Credit accounts quickly and securely.
+            Send money to other CrestPoint Credit account holders instantly.
           </p>
 
-          {/* Transfer Limits Info */}
+          {/* Send Money Limits Info */}
           <div style={styles.limitsBox}>
             <div style={styles.limitsHeader}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -168,31 +139,31 @@ export default function TransferPage() {
                 <line x1="12" y1="16" x2="12" y2="12" />
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
-              <span style={styles.limitsTitle}>Transfer Limits</span>
+              <span style={styles.limitsTitle}>Send Money Limits</span>
             </div>
             <div style={styles.limitsGrid}>
               <div style={styles.limitItem}>
-                <span style={styles.limitLabel}>Single Transfer Limit</span>
+                <span style={styles.limitLabel}>Per Transfer Limit</span>
                 <span style={styles.limitValue}>{formatCurrency(TRANSFER_LIMITS.single)}</span>
               </div>
               <div style={styles.limitItem}>
-                <span style={styles.limitLabel}>Daily Transfer Limit</span>
+                <span style={styles.limitLabel}>Daily Limit</span>
                 <span style={styles.limitValue}>{formatCurrency(TRANSFER_LIMITS.daily)}</span>
               </div>
               <div style={styles.limitItem}>
                 <span style={styles.limitLabel}>Today's Usage</span>
                 <span style={{
                   ...styles.limitValue,
-                  color: dailyPercent >= 80 ? '#dc2626' : '#111827',
+                  color: '#111827',
                 }}>
-                  {formatCurrency(dailyTotal)}
+                  {formatCurrency(0)}
                   <span style={{
                     fontSize: '12px',
                     fontWeight: 400,
                     color: '#6b7280',
                     marginLeft: '8px',
                   }}>
-                    ({formatCurrency(remainingDaily)} remaining)
+                    ({formatCurrency(TRANSFER_LIMITS.daily)} remaining)
                   </span>
                 </span>
               </div>
@@ -201,15 +172,10 @@ export default function TransferPage() {
             <div style={styles.progressBarBg}>
               <div style={{
                 ...styles.progressBarFill,
-                width: `${dailyPercent}%`,
-                backgroundColor: dailyPercent >= 80 ? '#dc2626' : dailyPercent >= 60 ? '#d97706' : '#1a56db',
+                width: '0%',
+                backgroundColor: '#1a56db',
               }} />
             </div>
-            {remainingDaily <= 0 && (
-              <div style={styles.limitWarning}>
-                You have reached your daily transfer limit. Please try again tomorrow.
-              </div>
-            )}
           </div>
 
           {/* Error Alert */}
@@ -232,7 +198,7 @@ export default function TransferPage() {
           <Modal
             isOpen={showSuccessModal}
             onClose={() => setShowSuccessModal(false)}
-            title="Transfer Successful"
+            title="Money Sent!"
             size="sm"
           >
             <div style={styles.successContent}>
@@ -246,7 +212,7 @@ export default function TransferPage() {
 
               <h3 style={styles.successTitle}>Money Sent Successfully!</h3>
               <p style={styles.successDescription}>
-                Your transfer has been processed and the recipient will receive the funds shortly.
+                Your money has been sent and the recipient will receive the funds instantly.
               </p>
 
               {transferResult && (
@@ -276,7 +242,7 @@ export default function TransferPage() {
 
               <div style={styles.successActions}>
                 <Button onClick={handleTransferAnother} variant="primary" fullWidth>
-                  Transfer Another
+                  Send Another
                 </Button>
                 <Link to="/transactions" style={{ textDecoration: 'none' }}>
                   <Button variant="outline" fullWidth style={{ marginTop: '8px' }}>

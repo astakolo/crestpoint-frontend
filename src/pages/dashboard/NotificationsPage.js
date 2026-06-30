@@ -159,9 +159,9 @@ export default function NotificationsPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <div style={styles.pageHeader}>
+          <div className="cp-notif-header" style={styles.pageHeader}>
             <div style={styles.headerLeft}>
-              <h1 style={styles.pageTitle}>Notifications</h1>
+              <h1 className="cp-page-title" style={styles.pageTitle}>Notifications</h1>
               {unreadCount > 0 && (
                 <span style={styles.unreadBadge}>
                   {unreadCount} unread
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
           </div>
 
           {/* Filter Tabs */}
-          <div style={styles.tabsContainer}>
+          <div className="cp-notif-tabs" style={styles.tabsContainer}>
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -231,6 +231,7 @@ export default function NotificationsPage() {
 
                 return (
                   <div
+                    className="cp-card"
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     style={{

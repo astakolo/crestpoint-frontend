@@ -138,8 +138,8 @@ export default function AccountsPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <div style={styles.pageHeader}>
-            <h1 style={styles.pageTitle}>My Accounts</h1>
+          <div className="cp-page-header" style={styles.pageHeader}>
+            <h1 className="cp-page-title" style={styles.pageTitle}>My Accounts</h1>
             <Button onClick={() => setShowCreateModal(true)}>
               + Create New Account
             </Button>
@@ -159,7 +159,7 @@ export default function AccountsPage() {
 
           {/* Accounts Grid */}
           {accounts.length > 0 ? (
-            <div style={styles.accountsGrid}>
+            <div className="cp-accounts-grid" style={styles.accountsGrid}>
               {accounts.map((account) => (
                 <AccountCard
                   key={account.id || account.account_number}
@@ -197,7 +197,7 @@ export default function AccountsPage() {
               Choose the type of account you want to create. You can have multiple accounts of different types.
             </p>
 
-            <div style={styles.typeGrid}>
+            <div className="cp-type-grid" style={styles.typeGrid}>
               {Object.entries(ACCOUNT_TYPE_OPTIONS).map(([key, config]) => (
                 <div
                   key={key}
@@ -254,7 +254,7 @@ export default function AccountsPage() {
               ))}
             </div>
 
-            <div style={styles.modalActions}>
+            <div className="cp-form-actions" style={styles.modalActions}>
               <Button variant="secondary" onClick={closeCreateModal} disabled={creating}>
                 Cancel
               </Button>
@@ -284,14 +284,14 @@ export default function AccountsPage() {
             ) : accountDetail ? (
               <div style={styles.detailContent}>
                 {/* Account Info Card */}
-                <div style={styles.detailCard}>
-                  <div style={styles.detailRow}>
+                <div className="cp-card" style={styles.detailCard}>
+                  <div className="cp-detail-row" style={styles.detailRow}>
                     <span style={styles.detailLabel}>Account Number</span>
                     <span style={styles.detailValue}>
                       {maskAccountNumber(accountDetail.account_number || accountDetail.number)}
                     </span>
                   </div>
-                  <div style={styles.detailRow}>
+                  <div className="cp-detail-row" style={styles.detailRow}>
                     <span style={styles.detailLabel}>Account Type</span>
                     <span style={{
                       ...styles.detailValue,
@@ -300,7 +300,7 @@ export default function AccountsPage() {
                       {accountDetail.account_type || 'N/A'}
                     </span>
                   </div>
-                  <div style={styles.detailRow}>
+                  <div className="cp-detail-row" style={styles.detailRow}>
                     <span style={styles.detailLabel}>Status</span>
                     <span style={styles.detailValue}>
                       <span style={{
@@ -336,7 +336,7 @@ export default function AccountsPage() {
                     </span>
                   </div>
                   <div style={styles.detailDivider} />
-                  <div style={styles.detailRow}>
+                  <div className="cp-detail-row" style={styles.detailRow}>
                     <span style={styles.detailLabel}>Available Balance</span>
                     <span style={{
                       fontSize: '24px',
@@ -347,13 +347,13 @@ export default function AccountsPage() {
                     </span>
                   </div>
                   {accountDetail.currency && (
-                    <div style={styles.detailRow}>
+                    <div className="cp-detail-row" style={styles.detailRow}>
                       <span style={styles.detailLabel}>Currency</span>
                       <span style={styles.detailValue}>{accountDetail.currency}</span>
                     </div>
                   )}
                   {accountDetail.created_at && (
-                    <div style={styles.detailRow}>
+                    <div className="cp-detail-row" style={styles.detailRow}>
                       <span style={styles.detailLabel}>Opened On</span>
                       <span style={styles.detailValue}>{formatDate(accountDetail.created_at)}</span>
                     </div>

@@ -197,7 +197,7 @@ export default function DepositWithdrawPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <h1 style={styles.pageTitle}>Deposit & Withdraw</h1>
+          <h1 className="cp-page-title" style={styles.pageTitle}>Deposit & Withdraw</h1>
           <p style={styles.pageDescription}>
             {isWithdraw
               ? 'Withdraw funds from your CrestPoint Credit account.'
@@ -218,7 +218,7 @@ export default function DepositWithdrawPage() {
           )}
 
           {/* Tab Toggle */}
-          <div style={styles.tabToggle}>
+          <div className="cp-tab-bar" style={styles.tabToggle}>
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -245,7 +245,7 @@ export default function DepositWithdrawPage() {
             </div>
           ) : (
             /* Form Card */
-            <div style={styles.formCard}>
+            <div className="cp-card" style={styles.formCard}>
               {/* Account Selection */}
               <div style={styles.fieldGroup}>
                 <label style={styles.label}>

@@ -18,7 +18,7 @@ const spinnerStyle = {
   borderRadius: '50%',
   border: '3px solid #e5e7eb',
   borderTopColor: '#1a56db',
-  animation: 'spin 0.8s linear infinite',
+  animation: 'cp-wr-spin 0.8s linear infinite',
 };
 
 export default function WithdrawalRequestsPage() {
@@ -48,10 +48,12 @@ export default function WithdrawalRequestsPage() {
         transactionService.getWithdrawalRequests(),
         accountService.getAccounts(),
       ]);
-      setRequests(wrRes.results || wrRes);
-      setAccounts(accRes.results || accRes);
+      const wrData = Array.isArray(wrRes) ? wrRes : wrRes?.results || [];
+      const accData = Array.isArray(accRes) ? accRes : accRes?.results || [];
+      setRequests(wrData);
+      setAccounts(accData);
     } catch (err) {
-      toast.error('Failed to load withdrawal requests');
+      toast.error(err?.response?.data?.detail || 'Failed to load withdrawal requests');
     } finally {
       setLoading(false);
     }
@@ -120,6 +122,7 @@ export default function WithdrawalRequestsPage() {
     return (
       <>
         <Navbar />
+        <style>{`@keyframes cp-wr-spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ paddingTop: '64px', minHeight: '100vh', backgroundColor: '#f9fafb', fontFamily: 'Inter, -apple-system, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={spinnerStyle} />
         </div>

@@ -189,13 +189,13 @@ export default function CheckDepositPage() {
       <div style={s.page}>
         <div style={s.container}>
           {/* Page Header */}
-          <h1 style={s.pageTitle}>Check Deposit</h1>
+          <h1 className="cp-page-title" style={s.pageTitle}>Check Deposit</h1>
           <p style={s.pageDescription}>
             Deposit checks into your account by uploading images of the front and back.
           </p>
 
           {/* Section 1: Deposit Form */}
-          <div style={s.card} className="check-deposit-form-card">
+          <div className="cp-card check-deposit-form-card" style={s.card}>
             <h2 style={s.sectionTitle}>Deposit a Check</h2>
 
             {loadingAccounts ? (
@@ -367,7 +367,7 @@ export default function CheckDepositPage() {
           </div>
 
           {/* Section 2: Deposit History */}
-          <div style={{ ...s.card, marginTop: '24px' }}>
+          <div className="cp-card" style={{ ...s.card, marginTop: '24px' }}>
             <h2 style={s.sectionTitle}>Deposit History</h2>
 
             {loadingDeposits ? (
@@ -386,7 +386,7 @@ export default function CheckDepositPage() {
                 </p>
               </div>
             ) : (
-              <div style={s.tableWrapper}>
+              <div className="cp-table-wrapper" style={s.tableWrapper}>
                 <table style={s.table}>
                   <thead>
                     <tr>

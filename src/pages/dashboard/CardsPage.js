@@ -302,15 +302,15 @@ export default function CardsPage() {
     <>
       <Navbar />
       <div style={s.page}>
-        <div style={s.container}>
+        <div className="cp-page-header" style={s.container}>
           {/* Page Header */}
-          <h1 style={s.pageTitle}>Cards</h1>
+          <h1 className="cp-page-title" style={s.pageTitle}>Cards</h1>
           <p style={s.pageDescription}>
             Manage your virtual and physical debit/credit cards.
           </p>
 
           {/* Tabs */}
-          <div style={s.tabBar}>
+          <div className="cp-tab-bar" style={s.tabBar}>
             {TABS.map((tab) => (
               <button
                 key={tab}
@@ -329,11 +329,11 @@ export default function CardsPage() {
           {activeTab === 'My Cards' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {loadingCards ? (
-                <div style={s.card}>
+                <div className="cp-card" style={s.card}>
                   <LoadingSpinner size="sm" text="Loading cards..." />
                 </div>
               ) : cardsError ? (
-                <div style={s.card}>
+                <div className="cp-card" style={s.card}>
                   <div style={s.errorBox}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: '1px' }}>
                       <circle cx="12" cy="12" r="10" />
@@ -344,7 +344,7 @@ export default function CardsPage() {
                   </div>
                 </div>
               ) : cards.length === 0 ? (
-                <div style={s.card}>
+                <div className="cp-card" style={s.card}>
                   <div style={s.emptyState}>
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" style={{ marginBottom: '12px' }}>
                       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -364,7 +364,7 @@ export default function CardsPage() {
               ) : (
                 <>
                   {/* Cards Grid */}
-                  <div style={s.cardsGrid}>
+                  <div className="cp-cards-grid" style={s.cardsGrid}>
                     {cards.map((card) => {
                       const isFrozen = card.status === 'frozen' || card.is_frozen;
                       const isSelected = card.id === selectedCardId;
@@ -434,7 +434,7 @@ export default function CardsPage() {
                           </div>
 
                           {/* Card Actions */}
-                          <div style={s.cardActions}>
+                          <div className="cp-card-actions" style={s.cardActions}>
                             <button
                               onClick={() => setDetailsCard(card)}
                               style={s.cardActionBtn}
@@ -519,7 +519,7 @@ export default function CardsPage() {
 
                   {/* Card Transactions */}
                   {selectedCard && (
-                    <div style={s.card}>
+                    <div className="cp-card" style={s.card}>
                       <h2 style={s.sectionTitle}>
                         Card Transactions
                         <span style={{ fontSize: '14px', fontWeight: 400, color: '#6b7280', marginLeft: '8px' }}>
@@ -539,7 +539,7 @@ export default function CardsPage() {
                           </p>
                         </div>
                       ) : (
-                        <div style={s.tableWrapper}>
+                        <div className="cp-table-wrapper" style={s.tableWrapper}>
                           <table style={s.table}>
                             <thead>
                               <tr>
@@ -575,7 +575,7 @@ export default function CardsPage() {
 
           {/* Tab: New Card */}
           {activeTab === 'New Card' && (
-            <div style={s.card}>
+            <div className="cp-card" style={s.card}>
               <h2 style={s.sectionTitle}>Create New Card</h2>
               <p style={{ margin: '0 0 24px', fontSize: '14px', color: '#6b7280', lineHeight: '20px' }}>
                 Link a card to your account for online payments and in-store purchases.
@@ -755,37 +755,37 @@ export default function CardsPage() {
             </div>
 
             {/* Full Card Number */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>Card Number</span>
               <span style={s.detailValue}>{formatCardDisplay(detailsCard.card_number || detailsCard.number)}</span>
             </div>
 
             {/* CVV */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>CVV</span>
               <span style={s.detailValue}>{detailsCard.cvv || '•••'}</span>
             </div>
 
             {/* Cardholder */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>Cardholder Name</span>
               <span style={s.detailValue}>{getCardholderName(detailsCard)}</span>
             </div>
 
             {/* Expiry */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>Expiry Date</span>
               <span style={s.detailValue}>{getExpiryDisplay(detailsCard)}</span>
             </div>
 
             {/* Brand */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>Brand</span>
               <span style={s.detailValue}>{(detailsCard.brand || 'visa').toUpperCase()}</span>
             </div>
 
             {/* Type */}
-            <div style={s.detailRow}>
+            <div className="cp-detail-flex-row" style={s.detailRow}>
               <span style={s.detailLabel}>Card Type</span>
               <span style={s.detailValue}>{(detailsCard.card_type || 'virtual').charAt(0).toUpperCase() + (detailsCard.card_type || 'virtual').slice(1)}</span>
             </div>

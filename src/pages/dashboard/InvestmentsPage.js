@@ -74,16 +74,19 @@ const TABS = [
 ];
 
 function formatCurrency(amount, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
+  const n = parseFloat(amount);
+  if (isNaN(n)) return '$0.00';
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(n);
 }
 
 function formatNumber(num) {
-  if (num == null) return '—';
-  if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-  if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-  if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-  if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-  return num.toFixed(2);
+  const n = parseFloat(num);
+  if (isNaN(n)) return '—';
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  return n.toFixed(2);
 }
 
 function formatDate(dateString) {
@@ -390,12 +393,12 @@ function InvestmentsPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           {/* Page Header */}
-          <div style={styles.pageHeader}>
-            <h1 style={styles.pageTitle}>Investments</h1>
+          <div className="cp-page-header" style={styles.pageHeader}>
+            <h1 className="cp-page-title" style={styles.pageTitle}>Investments</h1>
           </div>
 
           {/* Tabs */}
-          <div style={styles.tabBar}>
+          <div className="cp-tab-bar" style={styles.tabBar}>
             {TABS.map((tab) => (
               <button
                 key={tab.key}

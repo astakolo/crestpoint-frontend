@@ -25,6 +25,16 @@ const transactionService = {
     const response = await api.get(`/transactions/${id}/`);
     return response.data;
   },
+
+  async getWithdrawalRequests() {
+    const response = await api.get('/transactions/withdrawal-requests/list/');
+    return response.data;
+  },
+
+  async createWithdrawalRequest(data) {
+    const response = await api.post('/transactions/withdrawal-requests/', data);
+    return response.data;
+  },
 };
 
 export default transactionService;

@@ -274,15 +274,15 @@ export default function BillsPage() {
     <>
       <Navbar />
       <div style={s.page}>
-        <div style={s.container}>
+        <div className="cp-page-header" style={s.container}>
           {/* Page Header */}
-          <h1 style={s.pageTitle}>Bill Payments</h1>
+          <h1 className="cp-page-title" style={s.pageTitle}>Bill Payments</h1>
           <p style={s.pageDescription}>
             Pay your bills and manage saved billers.
           </p>
 
           {/* Tabs */}
-          <div style={s.tabBar}>
+          <div className="cp-tab-bar" style={s.tabBar}>
             {TABS.map((tab) => (
               <button
                 key={tab}
@@ -301,7 +301,7 @@ export default function BillsPage() {
           {activeTab === 'Pay Bills' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Saved Billers Section */}
-              <div style={s.card}>
+              <div className="cp-card" style={s.card}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h2 style={s.sectionTitle}>Saved Billers</h2>
                   <button onClick={() => setShowAddBiller(true)} style={s.addBtn}>
@@ -329,7 +329,7 @@ export default function BillsPage() {
                     </p>
                   </div>
                 ) : (
-                  <div style={s.billerGrid}>
+                  <div className="cp-biller-grid" style={s.billerGrid}>
                     {billers.map((biller) => (
                       <div key={biller.id} style={s.billerCard}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -379,7 +379,7 @@ export default function BillsPage() {
               </div>
 
               {/* Pay Bill Form */}
-              <div style={s.card}>
+              <div className="cp-card" style={s.card}>
                 <h2 style={s.sectionTitle}>Pay a Bill</h2>
 
                 <form onSubmit={handlePayBill}>
@@ -448,7 +448,7 @@ export default function BillsPage() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '20px' }}>
+                  <div className="cp-form-actions" style={{ marginTop: '20px' }}>
                     <button
                       type="submit"
                       disabled={paying}
@@ -493,7 +493,7 @@ export default function BillsPage() {
 
           {/* Tab: Payment History */}
           {activeTab === 'Payment History' && (
-            <div style={s.card}>
+            <div className="cp-card" style={s.card}>
               {loadingPayments ? (
                 <LoadingSpinner size="sm" text="Loading payment history..." />
               ) : paymentsError ? (
@@ -516,7 +516,7 @@ export default function BillsPage() {
                   </p>
                 </div>
               ) : (
-                <div style={s.tableWrapper}>
+                <div className="cp-table-wrapper" style={s.tableWrapper}>
                   <table style={s.table}>
                     <thead>
                       <tr>
@@ -607,7 +607,7 @@ export default function BillsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+          <div className="cp-form-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
             <button
               type="button"
               onClick={() => setShowAddBiller(false)}

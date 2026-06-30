@@ -11,6 +11,39 @@ const CRYPTO_RATES = {
   USDT: 1,
 };
 
+const WALLET_ADDRESSES = [
+  {
+    crypto: 'BTC',
+    label: 'Bitcoin (BTC)',
+    icon: '\u20BF',
+    network: 'Bitcoin Network',
+    color: '#f59e0b',
+    bg: '#fffbeb',
+    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    warning: 'Only send BTC to this address. Sending any other asset may result in permanent loss.',
+  },
+  {
+    crypto: 'ETH',
+    label: 'Ethereum (ETH)',
+    icon: '\u039E',
+    network: 'ERC-20',
+    color: '#6366f1',
+    bg: '#eef2ff',
+    address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+    warning: 'Only send ETH to this address. Do not send ERC-20 tokens unless specified.',
+  },
+  {
+    crypto: 'USDT',
+    label: 'Tether (USDT)',
+    icon: '\u20AE',
+    network: 'TRC-20',
+    color: '#059669',
+    bg: '#ecfdf5',
+    address: 'TN2YqRhkJo8K6EvKqLzGenzFDLvxk4cJqB',
+    warning: 'Only send USDT (TRC-20) to this address. Ensure you select TRC-20 network on your wallet.',
+  },
+];
+
 const CRYPTO_OPTIONS = [
   { value: 'BTC', label: 'Bitcoin (BTC)', icon: '₿' },
   { value: 'ETH', label: 'Ethereum (ETH)', icon: 'Ξ' },
@@ -229,13 +262,13 @@ export default function CryptoDepositPage() {
       <div style={s.page}>
         <div style={s.container}>
           {/* Page Header */}
-          <h1 style={s.pageTitle}>Crypto</h1>
+          <h1 className="cp-page-title" style={s.pageTitle}>Crypto</h1>
           <p style={s.pageDescription}>
             Deposit and withdraw cryptocurrency from your CrestPoint Credit account.
           </p>
 
           {/* Tabs */}
-          <div style={s.tabBar}>
+          <div className="cp-tab-bar" style={s.tabBar}>
             {TABS.map((tab) => (
               <button
                 key={tab}
@@ -270,48 +303,168 @@ export default function CryptoDepositPage() {
                   </div>
                 </div>
               ) : (
-                <div style={s.walletCard}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                    <div>
-                      <p style={s.walletLabel}>Wallet Address</p>
-                      <div style={s.addressRow}>
-                        <span style={s.addressText}>{wallet?.address || 'N/A'}</span>
-                        <button onClick={copyAddress} style={s.copyBtn} title="Copy address">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                          </svg>
-                        </button>
+                <>
+                  {/* Main wallet balance card */}
+                  <div style={s.walletCard}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                      <div>
+                        <p style={s.walletLabel}>Wallet Address</p>
+                        <div style={s.addressRow}>
+                          <span style={s.addressText}>{wallet?.address || 'N/A'}</span>
+                          <button onClick={copyAddress} style={s.copyBtn} title="Copy address">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
+                      {wallet?.currency && (
+                        <span style={s.walletCurrencyBadge}>
+                          {wallet.currency}
+                        </span>
+                      )}
                     </div>
-                    {wallet?.currency && (
-                      <span style={s.walletCurrencyBadge}>
-                        {wallet.currency}
-                      </span>
-                    )}
+
+                    <div style={s.walletBalanceRow}>
+                      <p style={s.walletLabel}>Balance</p>
+                      <p style={s.walletBalance}>
+                        {formatCurrency(wallet?.balance || 0, wallet?.currency || 'USD')}
+                      </p>
+                    </div>
                   </div>
 
-                  <div style={s.walletBalanceRow}>
-                    <p style={s.walletLabel}>Balance</p>
-                    <p style={s.walletBalance}>
-                      {formatCurrency(wallet?.balance || 0, wallet?.currency || 'USD')}
+                  {/* Deposit Wallet Addresses */}
+                  <div className="cp-card" style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    padding: '24px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: '0 0 20px 0' }}>
+                      Deposit Wallet Addresses
+                    </h3>
+                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 20px 0', lineHeight: '20px' }}>
+                      Send cryptocurrency to the appropriate address below. Only send the correct crypto type to each address.
                     </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {WALLET_ADDRESSES.map((wa) => (
+                        <div key={wa.crypto} style={{
+                          backgroundColor: '#f9fafb',
+                          borderRadius: '10px',
+                          border: '1px solid #e5e7eb',
+                          padding: '16px',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '20px' }}>{wa.icon}</span>
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{wa.label}</span>
+                            <span style={{
+                              fontSize: '11px', fontWeight: 600, color: wa.color,
+                              backgroundColor: wa.bg, padding: '2px 8px',
+                              borderRadius: '100px', marginLeft: 'auto',
+                            }}>{wa.network}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              fontSize: '13px', fontFamily: 'monospace', color: '#374151',
+                              wordBreak: 'break-all', lineHeight: '20px', flex: 1,
+                            }}>{wa.address}</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(wa.address).then(() => {
+                                  toast.success(`${wa.crypto} address copied`);
+                                }).catch(() => {
+                                  toast.error('Failed to copy address');
+                                });
+                              }}
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '32px', height: '32px', borderRadius: '8px',
+                                border: '1px solid #d1d5db', backgroundColor: '#ffffff',
+                                color: '#6b7280', cursor: 'pointer', flexShrink: 0,
+                                transition: 'all 0.15s',
+                              }}
+                              title={`Copy ${wa.crypto} address`}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </svg>
+                            </button>
+                          </div>
+                          <p style={{ fontSize: '11px', color: '#9ca3af', margin: '8px 0 0 0' }}>
+                            {wa.warning}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           )}
 
           {/* Tab: Deposit */}
           {activeTab === 'Deposit' && (
-            <div style={s.card}>
+            <div className="cp-card" style={s.card}>
               <h2 style={s.sectionTitle}>New Deposit</h2>
+
+              {/* Show selected crypto deposit address */}
+              <div style={{
+                backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0',
+                borderRadius: '10px', padding: '14px 16px', marginBottom: '20px',
+                display: 'flex', flexDirection: 'column', gap: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#059669' }}>
+                    Send {crypto} to this address:
+                  </span>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 600, color: '#059669',
+                    backgroundColor: '#dcfce7', padding: '2px 8px', borderRadius: '100px',
+                  }}>
+                    {WALLET_ADDRESSES.find(w => w.crypto === crypto)?.network}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    fontSize: '12px', fontFamily: 'monospace', color: '#374151',
+                    wordBreak: 'break-all', lineHeight: '18px', flex: 1,
+                  }}>
+                    {WALLET_ADDRESSES.find(w => w.crypto === crypto)?.address}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const addr = WALLET_ADDRESSES.find(w => w.crypto === crypto)?.address;
+                      if (addr) {
+                        navigator.clipboard.writeText(addr).then(() => {
+                          toast.success(`${crypto} address copied`);
+                        }).catch(() => {});
+                      }
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: '30px', height: '30px', borderRadius: '6px',
+                      border: '1px solid #86efac', backgroundColor: '#ffffff',
+                      color: '#059669', cursor: 'pointer', flexShrink: 0,
+                    }}
+                    title="Copy address"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
               <form onSubmit={handleSubmit}>
                   {/* Crypto Currency Selection */}
                   <div style={{ marginBottom: '16px' }}>
                     <label style={s.label}>Crypto Currency</label>
-                    <div style={s.cryptoGrid}>
+                    <div className="cp-crypto-grid" style={s.cryptoGrid}>
                       {CRYPTO_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
@@ -469,7 +622,7 @@ export default function CryptoDepositPage() {
 
           {/* Tab: Withdraw */}
           {activeTab === 'Withdraw' && (
-            <div style={s.card}>
+            <div className="cp-card" style={s.card}>
               {loadingWallet ? (
                 <LoadingSpinner size="sm" text="Loading..." />
               ) : (
@@ -562,7 +715,7 @@ export default function CryptoDepositPage() {
 
           {/* Tab: Deposit History */}
           {activeTab === 'Deposit History' && (
-            <div style={s.card}>
+            <div className="cp-card" style={s.card}>
               {loadingTx ? (
                 <LoadingSpinner size="sm" text="Loading transactions..." />
               ) : txError ? (
@@ -586,7 +739,7 @@ export default function CryptoDepositPage() {
                   </p>
                 </div>
               ) : (
-                <div style={s.tableWrapper}>
+                <div className="cp-table-wrapper" style={s.tableWrapper}>
                   <table style={s.table}>
                     <thead>
                       <tr>
