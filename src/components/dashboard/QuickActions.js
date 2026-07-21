@@ -3,7 +3,7 @@ import React from 'react';
 const ACTIONS = [
   {
     id: 'transfer',
-    label: 'Transfer Money',
+    label: 'Send Money',
     icon: '🔄',
     description: 'Send funds to another account',
     color: '#1a56db',

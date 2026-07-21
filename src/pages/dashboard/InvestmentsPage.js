@@ -366,11 +366,11 @@ function InvestmentsPage() {
 
   // ── Computed values ─────────────────────────────────────────
   const buyTotal = buyModal.stock
-    ? (parseFloat(buyQuantity) || 0) * (buyModal.stock.price || buyModal.stock.current_price || 0)
+    ? (parseFloat(buyQuantity) || 0) * parseFloat(buyModal.stock.price || buyModal.stock.current_price || 0)
     : 0;
 
   const sellTotal = sellModal.holding
-    ? (parseFloat(sellQuantity) || 0) * (sellModal.holding.current_price || sellModal.holding.price || 0)
+    ? (parseFloat(sellQuantity) || 0) * parseFloat(sellModal.holding.current_price || sellModal.holding.price || 0)
     : 0;
 
   const pnlPercent = portfolioSummary.total_invested > 0
@@ -458,9 +458,9 @@ function InvestmentsPage() {
               ) : (
                 <div style={styles.stockGrid}>
                   {filteredStocks.map((stock) => {
-                    const change = stock.change_percent ?? stock.change ?? 0;
+                    const change = parseFloat(stock.change_percent ?? stock.change ?? 0);
                     const isPositive = change >= 0;
-                    const price = stock.price || stock.current_price || 0;
+                    const price = parseFloat(stock.price || stock.current_price || 0);
                     return (
                       <div key={stock.id || stock.symbol} style={styles.stockCard}>
                         <div style={styles.stockCardHeader}>
@@ -565,9 +565,9 @@ function InvestmentsPage() {
                           </thead>
                           <tbody>
                             {holdings.map((h) => {
-                              const avgPrice = h.avg_buy_price || h.average_price || 0;
-                              const curPrice = h.current_price || h.price || 0;
-                              const qty = h.quantity || 0;
+                              const avgPrice = parseFloat(h.avg_buy_price || h.average_price || 0);
+                              const curPrice = parseFloat(h.current_price || h.price || 0);
+                              const qty = parseFloat(h.quantity || 0);
                               const currentValue = h.current_value || (curPrice * qty);
                               const pnl = h.pnl != null ? h.pnl : (currentValue - avgPrice * qty);
                               const pctChange = avgPrice > 0 ? ((curPrice - avgPrice) / avgPrice) * 100 : 0;

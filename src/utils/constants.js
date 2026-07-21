@@ -8,8 +8,8 @@ export const ACCOUNT_TYPES = {
 export const TRANSACTION_TYPES = {
   deposit: 'Deposit',
   withdrawal: 'Withdrawal',
-  transfer_in: 'Transfer In',
-  transfer_out: 'Transfer Out',
+  transfer_in: 'Received',
+  transfer_out: 'Sent',
   payment: 'Payment',
 };
 
@@ -35,6 +35,7 @@ export const USER_ROLES = {
 
 export const PAYMENT_METHODS = {
   bank_transfer: 'Bank Transfer',
+  send_money: 'Send Money',
   debit_card: 'Debit Card',
   credit_card: 'Credit Card',
   mobile_money: 'Mobile Money',

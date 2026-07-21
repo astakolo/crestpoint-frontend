@@ -2,9 +2,8 @@
 
 /* ══════════════════════════════════════════════════
    BREAKPOINTS USED:
-   • 1100px – tablet landscape (navbar → hamburger)
    •  900px – tablet portrait
-   •  768px – large phone / small tablet
+   •  768px – large phone / small tablet (navbar → hamburger)
    •  640px – phone
    •  480px – small phone
    ══════════════════════════════════════════════════ */
@@ -16,7 +15,7 @@
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 768px) {
   .cp-desktop-nav {
     display: none !important;
   }
@@ -38,7 +37,7 @@
 }
 
 /* ── DASHBOARD: Stats Grid (4-col → responsive) ── */
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
   .cp-stats-grid {
     grid-template-columns: repeat(3, 1fr) !important;
   }

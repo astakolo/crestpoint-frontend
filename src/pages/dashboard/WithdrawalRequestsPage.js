@@ -173,7 +173,12 @@ export default function WithdrawalRequestsPage() {
                     </select>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Amount (USD) *</label>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>
+                      Amount ({(() => {
+                        const sel = accounts.find(a => String(a.id) === String(form.account_id));
+                        return sel?.currency || 'USD';
+                      })()}) *
+                    </label>
                     <input
                       type="number"
                       name="amount"
@@ -307,7 +312,11 @@ export default function WithdrawalRequestsPage() {
                         </div>
 
                         <div style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginTop: 8 }}>
-                          ${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          {(() => {
+                            const curr = wr.currency || accounts.find(a => String(a.id) === String(wr.account))?.currency || 'USD';
+                            const sym = { USD: '$', EUR: '€', GBP: '£', AUD: 'A$' }[curr] || '$';
+                            return `${sym}${parseFloat(wr.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                          })()}
                         </div>
 
                         {wr.description && (
