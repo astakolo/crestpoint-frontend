@@ -18,20 +18,20 @@ function maskEmail(email) {
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { loginWithTokens, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const from = location.state?.from?.pathname || '/dashboard';
 
-  // Step 1: Email
+  // Step 1: Email + Password
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [sendingOTP, setSendingOTP] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Step 2: OTP + Password
+  // Step 2: OTP only
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [otpError, setOtpError] = useState('');
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +57,7 @@ export default function LoginPage() {
     e?.preventDefault();
     setServerError('');
     setEmailError('');
+    setPasswordError('');
 
     if (!email.trim()) {
       setEmailError('Email is required');
@@ -66,19 +67,21 @@ export default function LoginPage() {
       setEmailError('Please enter a valid email address');
       return;
     }
+    if (!password) {
+      setPasswordError('Password is required');
+      return;
+    }
 
     setSendingOTP(true);
     try {
-      await authService.sendLoginOTP(email);
+      await authService.sendLoginOTP(email, password);
       setEmailSent(true);
       setResendCooldown(60);
     } catch (error) {
-      const msg =
-        error.response?.data?.email?.[0] ||
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        'Failed to send verification code. Please try again.';
-      setServerError(msg);
+      const emailMsg = error.response?.data?.email?.[0];
+      const detail = error.response?.data?.detail;
+      const message = emailMsg || detail || 'Failed to send verification code. Please try again.';
+      setServerError(message);
     } finally {
       setSendingOTP(false);
     }
@@ -89,7 +92,7 @@ export default function LoginPage() {
     setOtpError('');
     setSendingOTP(true);
     try {
-      await authService.sendLoginOTP(email);
+      await authService.sendLoginOTP(email, password);
       setResendCooldown(60);
       setOtp(['', '', '', '', '', '']);
       if (inputRefs.current[0]) inputRefs.current[0].focus();
@@ -133,24 +136,18 @@ export default function LoginPage() {
     e.preventDefault();
     setServerError('');
     setOtpError('');
-    setPasswordError('');
 
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       setOtpError('Please enter the 6-digit code');
       return;
     }
-    if (!password) {
-      setPasswordError('Password is required');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
-      // Verify OTP first
-      await authService.verifyLoginOTP(email, otpCode);
-      // Then login
-      await login(email, password);
+      // Verify OTP — backend returns JWT tokens directly
+      const { user: userData } = await authService.verifyLoginOTP(email, otpCode);
+      await loginWithTokens({ user: userData });
       navigate(from, { replace: true });
     } catch (error) {
       if (error.response?.data?.otp) {
@@ -160,7 +157,7 @@ export default function LoginPage() {
           error.response?.data?.detail ||
           error.response?.data?.message ||
           error.response?.data?.non_field_errors?.[0] ||
-          'Invalid code or password. Please try again.';
+          'Verification failed. Please try again.';
         setServerError(message);
       }
     } finally {
@@ -171,7 +168,6 @@ export default function LoginPage() {
   const handleBackToEmail = () => {
     setEmailSent(false);
     setOtp(['', '', '', '', '', '']);
-    setPassword('');
     setOtpError('');
     setServerError('');
   };
@@ -204,10 +200,10 @@ export default function LoginPage() {
         )}
 
         {!emailSent ? (
-          /* ── Step 1: Enter Email ── */
+          /* ── Step 1: Enter Email + Password ── */
           <>
             <h2 style={styles.heading}>Welcome back</h2>
-            <p style={styles.subheading}>Enter your email to receive a verification code</p>
+            <p style={styles.subheading}>Enter your credentials to receive a verification code</p>
 
             <form onSubmit={handleSendOTP} style={styles.form}>
               <InputField
@@ -226,13 +222,36 @@ export default function LoginPage() {
                 }
               />
 
+              <InputField
+                label="Password"
+                type="password"
+                name="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+                error={passwordError}
+                required
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                }
+              />
+
+              {/* Forgot password */}
+              <div style={{ textAlign: 'right' }}>
+                <Link to="/forgot-password" style={styles.forgotLink}>
+                  Forgot Password?
+                </Link>
+              </div>
+
               <Button type="submit" fullWidth loading={sendingOTP} size="lg">
                 Send Verification Code
               </Button>
             </form>
           </>
         ) : (
-          /* ── Step 2: OTP + Password ── */
+          /* ── Step 2: OTP Only (credentials already verified) ── */
           <>
             <h2 style={styles.heading}>Verify your identity</h2>
             <p style={styles.subheading}>
@@ -279,30 +298,6 @@ export default function LoginPage() {
                       : 'Resend code'}
                   </button>
                 </div>
-              </div>
-
-              {/* Password */}
-              <InputField
-                label="Password"
-                type="password"
-                name="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
-                error={passwordError}
-                required
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                }
-              />
-
-              {/* Forgot password */}
-              <div style={{ textAlign: 'right' }}>
-                <Link to="/forgot-password" style={styles.forgotLink}>
-                  Forgot Password?
-                </Link>
               </div>
 
               <Button type="submit" fullWidth loading={isSubmitting} size="lg">

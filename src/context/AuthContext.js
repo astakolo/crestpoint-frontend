@@ -16,6 +16,12 @@ export function AuthProvider({ children }) {
     return userData;
   }, []);
 
+  const loginWithTokens = useCallback(async ({ access, user: userData }) => {
+    api.setAuthToken(access);
+    setUser(userData);
+    return userData;
+  }, []);
+
   const register = useCallback(async (data) => {
     const response = await authService.register(data);
     // Auto-login after registration
@@ -123,6 +129,7 @@ export function AuthProvider({ children }) {
     isAuthenticated,
     isLoading,
     login,
+    loginWithTokens,
     register,
     logout,
     refreshAccessToken,

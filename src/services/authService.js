@@ -57,14 +57,16 @@ const authService = {
     return response.data;
   },
 
-  async sendLoginOTP(email) {
-    const response = await api.post('/auth/otp/send/', { email });
+  async sendLoginOTP(email, password) {
+    const response = await api.post('/auth/otp/send/', { email, password });
     return response.data;
   },
 
   async verifyLoginOTP(email, otp) {
-    const response = await api.post('/auth/otp/verify/', { email, otp });
-    return response.data;
+    const response = await api.post('/auth/otp/verify/', { email, otp }, { withCredentials: true });
+    const { access, refresh, user } = response.data;
+    api.setAuthToken(access);
+    return { access, refresh, user };
   },
 
   async sendRegisterOTP(email) {
