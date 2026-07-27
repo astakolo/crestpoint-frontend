@@ -13,6 +13,20 @@ const DOCUMENT_TYPES = [
   { value: 'driver_license', label: "Driver's License" },
 ];
 
+const COUNTRY_OPTIONS = [
+  { value: 'US', label: 'United States' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'FR', label: 'France' },
+  { value: 'NG', label: 'Nigeria' },
+  { value: 'GH', label: 'Ghana' },
+  { value: 'KE', label: 'Kenya' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
 
@@ -24,6 +38,8 @@ export default function KYCPage() {
   const [success, setSuccess] = useState('');
 
   // Form state
+  const [country, setCountry] = useState('US');
+  const [ssn, setSsn] = useState('');
   const [documentType, setDocumentType] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [frontFile, setFrontFile] = useState(null);
@@ -136,6 +152,13 @@ export default function KYCPage() {
 
   const validateForm = () => {
     const errors = {};
+    if (!country) errors.country = 'Please select your country';
+    if (country === 'US') {
+      const ssnClean = ssn.replace(/-/g, '');
+      if (!ssnClean || ssnClean.length !== 9 || !/^\d{9}$/.test(ssnClean)) {
+        errors.ssn = 'A valid 9-digit SSN is required for US applicants (e.g. 123-45-6789)';
+      }
+    }
     if (!documentType) errors.documentType = 'Please select a document type';
     if (!documentNumber.trim()) errors.documentNumber = 'Document number is required';
     if (!frontFile) errors.front = 'Front image is required';
@@ -149,6 +172,8 @@ export default function KYCPage() {
     setError('');
     try {
       const formData = new FormData();
+      formData.append('country', country);
+      if (country === 'US') formData.append('ssn', ssn);
       formData.append('document_type', documentType);
       formData.append('document_number', documentNumber);
       formData.append('front_image', frontFile);
@@ -158,6 +183,8 @@ export default function KYCPage() {
       setSuccess('Documents submitted successfully! Your verification is now pending.');
       setKycStatus('pending');
       // Clear form
+      setCountry('US');
+      setSsn('');
       setDocumentType('');
       setDocumentNumber('');
       setFrontFile(null);
@@ -388,6 +415,59 @@ export default function KYCPage() {
               {/* Upload Form */}
               <div style={styles.formCard}>
                 <h3 style={styles.formTitle}>Upload Your Documents</h3>
+
+                {/* Country */}
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>
+                    Country / Region <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
+                  <select
+                    value={country}
+                    onChange={(e) => {
+                      setCountry(e.target.value);
+                      setFormErrors((prev) => ({ ...prev, country: '' }));
+                    }}
+                    style={{
+                      ...styles.selectInput,
+                      borderColor: formErrors.country ? '#dc2626' : '#e5e7eb',
+                    }}
+                  >
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                  {formErrors.country && (
+                    <span style={styles.errorText}>{formErrors.country}</span>
+                  )}
+                </div>
+
+                {/* SSN (US only) */}
+                {country === 'US' && (
+                  <div style={styles.fieldGroup}>
+                    <label style={styles.label}>
+                      Social Security Number (SSN) <span style={{ color: '#dc2626' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={ssn}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9-]/g, '').slice(0, 11);
+                        setSsn(val);
+                        setFormErrors((prev) => ({ ...prev, ssn: '' }));
+                      }}
+                      placeholder="123-45-6789"
+                      maxLength={11}
+                      style={{
+                        ...styles.textInput,
+                        borderColor: formErrors.ssn ? '#dc2626' : '#e5e7eb',
+                      }}
+                    />
+                    <span style={styles.hintText}>Enter your 9-digit SSN (e.g. 123-45-6789)</span>
+                    {formErrors.ssn && (
+                      <span style={styles.errorText}>{formErrors.ssn}</span>
+                    )}
+                  </div>
+                )}
 
                 {/* Document Type */}
                 <div style={styles.fieldGroup}>
@@ -937,6 +1017,13 @@ const styles = {
     fontSize: '12px',
     color: '#dc2626',
     lineHeight: '16px',
+  },
+  hintText: {
+    fontSize: '12px',
+    color: '#6b7280',
+    lineHeight: '16px',
+    display: 'block',
+    marginTop: '4px',
   },
   // Drop zone
   dropZone: {
