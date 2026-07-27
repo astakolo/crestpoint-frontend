@@ -9,6 +9,7 @@ const CRYPTO_RATES = {
   BTC: 67500,
   ETH: 3450,
   USDT: 1,
+  BNB: 580,
 };
 
 const WALLET_ADDRESSES = [
@@ -19,7 +20,7 @@ const WALLET_ADDRESSES = [
     network: 'Bitcoin Network',
     color: '#f59e0b',
     bg: '#fffbeb',
-    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    address: 'bc1qej5sjukkdvcw3phapdhtl0xkkkvzgs5sekwnu2',
     warning: 'Only send BTC to this address. Sending any other asset may result in permanent loss.',
   },
   {
@@ -29,7 +30,7 @@ const WALLET_ADDRESSES = [
     network: 'ERC-20',
     color: '#6366f1',
     bg: '#eef2ff',
-    address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+    address: '0xa794e9A30317A29AF3829F08957249b5432aB4AE',
     warning: 'Only send ETH to this address. Do not send ERC-20 tokens unless specified.',
   },
   {
@@ -39,8 +40,18 @@ const WALLET_ADDRESSES = [
     network: 'TRC-20',
     color: '#059669',
     bg: '#ecfdf5',
-    address: 'TN2YqRhkJo8K6EvKqLzGenzFDLvxk4cJqB',
+    address: 'TG67kJojNpGNnvS7ahGP79oAFfmSf9cPZi',
     warning: 'Only send USDT (TRC-20) to this address. Ensure you select TRC-20 network on your wallet.',
+  },
+  {
+    crypto: 'BNB',
+    label: 'BNB Smart Chain (BNB)',
+    icon: '\u25B3',
+    network: 'BEP-20',
+    color: '#f0b90b',
+    bg: '#fefce8',
+    address: '0xa794e9A30317A29AF3829F08957249b5432aB4AE',
+    warning: 'Only send BNB to this address. Ensure you select BSC (BEP-20) network on your wallet.',
   },
 ];
 
@@ -48,6 +59,7 @@ const CRYPTO_OPTIONS = [
   { value: 'BTC', label: 'Bitcoin (BTC)', icon: '₿' },
   { value: 'ETH', label: 'Ethereum (ETH)', icon: 'Ξ' },
   { value: 'USDT', label: 'Tether (USDT)', icon: '₮' },
+  { value: 'BNB', label: 'BNB Smart Chain (BNB)', icon: '▲' },
 ];
 
 const TABS = ['Wallet', 'Deposit', 'Withdraw', 'Deposit History'];
