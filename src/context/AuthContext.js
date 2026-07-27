@@ -24,12 +24,8 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (data) => {
     const response = await authService.register(data);
-    // Auto-login after registration
-    if (response.email && data.password) {
-      await login(response.email, data.password);
-    }
     return response;
-  }, [login]);
+  }, []);
 
   const refreshAccessToken = useCallback(async () => {
     try {

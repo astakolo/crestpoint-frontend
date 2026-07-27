@@ -53,6 +53,7 @@ export default function RegisterPage() {
   const [sendingOTP, setSendingOTP] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   const inputRefs = useRef([]);
 
@@ -300,9 +301,7 @@ export default function RegisterPage() {
         phone: formData.phone || undefined,
         password: formData.password,
       });
-      navigate('/login', {
-        state: { registrationSuccess: true },
-      });
+      setRegistrationComplete(true);
     } catch (error) {
       if (error.response?.data?.otp) {
         setOtpError(error.response.data.otp);
@@ -354,7 +353,43 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {!otpSent ? (
+        {registrationComplete ? (
+          /* ── Registration Complete — KYC Pending ── */
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={styles.successIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h2 style={{ ...styles.heading, textAlign: 'center' }}>Account Created Successfully</h2>
+            <p style={{ ...styles.subheading, textAlign: 'center', marginBottom: '24px' }}>
+              Your account has been registered and is pending identity verification.
+            </p>
+            <div style={styles.kycNotice}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', textAlign: 'left' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+                    KYC Verification Required
+                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#4b5563', lineHeight: '20px' }}>
+                    Before you can access your account, an administrator will review and approve your identity verification. You will be notified once your account is activated.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: '24px' }}>
+              <Link to="/login" style={styles.footerLink}>
+                Go to Login
+              </Link>
+            </div>
+          </div>
+        ) : !otpSent ? (
           /* ── Step 1: Registration Form ── */
           <>
             <h2 style={styles.heading}>Create your account</h2>
@@ -814,5 +849,22 @@ const styles = {
     textDecoration: 'none',
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  successIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    backgroundColor: '#ecfdf5',
+    marginBottom: '20px',
+  },
+  kycNotice: {
+    backgroundColor: '#eff6ff',
+    border: '1px solid #bfdbfe',
+    borderRadius: '8px',
+    padding: '16px',
+    marginTop: '8px',
   },
 };
