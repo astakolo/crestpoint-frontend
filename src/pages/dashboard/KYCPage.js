@@ -49,7 +49,7 @@ export default function KYCPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Form state
+  // Form state s
   const [country, setCountry] = useState('US');
   const [ssn, setSsn] = useState('');
   const [documentType, setDocumentType] = useState('');
