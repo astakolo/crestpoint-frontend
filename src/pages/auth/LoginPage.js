@@ -146,8 +146,8 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       // Verify OTP — backend returns JWT tokens directly
-      const { user: userData } = await authService.verifyLoginOTP(email, otpCode);
-      await loginWithTokens({ user: userData });
+      const { access, user: userData } = await authService.verifyLoginOTP(email, otpCode);
+      await loginWithTokens({ access, user: userData });
       navigate(from, { replace: true });
     } catch (error) {
       if (error.response?.data?.otp) {
@@ -203,7 +203,7 @@ export default function LoginPage() {
           /* ── Step 1: Enter Email + Password ── */
           <>
             <h2 style={styles.heading}>Welcome back</h2>
-            <p style={styles.subheading}>Enter your credentials to receive a verification code</p>
+            <p style={styles.subheading}>Sign in to your account</p>
 
             <form onSubmit={handleSendOTP} style={styles.form}>
               <InputField
@@ -246,7 +246,7 @@ export default function LoginPage() {
               </div>
 
               <Button type="submit" fullWidth loading={sendingOTP} size="lg">
-                Send Verification Code
+                Login
               </Button>
             </form>
           </>
