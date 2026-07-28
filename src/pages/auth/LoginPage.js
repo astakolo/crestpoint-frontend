@@ -4,13 +4,15 @@ import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
 import InputField from '../../components/common/InputField';
 import Button from '../../components/common/Button';
+import Alert from '../../components/common/Alert';
 import { validateEmail } from '../../utils/helpers';
 
 function maskEmail(email) {
   const [local, domain] = email.split('@');
   if (!domain) return email;
   const visible = local.slice(0, 2);
-  return `${visible}****@${domain}`;
+  const masked = '****';
+  return `${visible}${masked}@${domain}`;
 }
 
 export default function LoginPage() {
@@ -27,12 +29,11 @@ export default function LoginPage() {
   const [passwordError, setPasswordError] = useState('');
   const [sendingOTP, setSendingOTP] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [loginError, setLoginError] = useState('');
 
-  // Step 2: OTP
+  // Step 2: OTP only
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
-  const [otpServerError, setOtpServerError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -52,68 +53,9 @@ export default function LoginPage() {
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
-  // Auto-focus first OTP input when OTP step appears
-  useEffect(() => {
-    if (emailSent && inputRefs.current[0]) {
-      setTimeout(() => inputRefs.current[0].focus(), 100);
-    }
-  }, [emailSent]);
-
-  // Parse backend error and return a user-friendly message
-  const parseError = (error) => {
-    if (!error.response) {
-      return 'Unable to connect to the server. Please check your internet connection.';
-    }
-    const data = error.response.data;
-    const status = error.response.status;
-
-    if (status === 429) {
-      return 'Too many attempts. Please wait a moment before trying again.';
-    }
-    if (status === 500 || status === 502 || status === 503) {
-      return 'A server error occurred. Please try again later.';
-    }
-
-    // Field-specific errors
-    const emailMsg = data.email?.[0];
-    const otpMsg = data.otp?.[0];
-    const nonField = data.non_field_errors?.[0];
-    const detail = data.detail;
-    const msg = data.message;
-
-    // Known backend error messages
-    const text = emailMsg || otpMsg || nonField || detail || msg || '';
-    if (text.includes('pending KYC')) {
-      return 'Your account is pending KYC verification. Please complete identity verification to activate your account.';
-    }
-    if (text.includes('temporarily locked')) {
-      return 'Your account has been temporarily locked due to too many failed attempts. Please try again later.';
-    }
-    if (text.includes('Invalid email or password')) {
-      return 'Invalid email or password. Please check your credentials and try again.';
-    }
-    if (text.includes('expired')) {
-      return 'Verification code has expired. Please request a new one.';
-    }
-    if (text.includes('Too many failed attempts')) {
-      return 'Too many failed attempts. Please request a new verification code.';
-    }
-    if (text.includes('Invalid verification code')) {
-      return 'Invalid verification code. Please check and try again.';
-    }
-    if (text.includes('Failed to send')) {
-      return 'Failed to send verification email. Please try again.';
-    }
-    if (text.includes('not found')) {
-      return 'Session expired. Please go back and log in again.';
-    }
-
-    return text || 'Something went wrong. Please try again.';
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError('');
+  const handleSendOTP = async (e) => {
+    e?.preventDefault();
+    setServerError('');
     setEmailError('');
     setPasswordError('');
 
@@ -134,10 +76,12 @@ export default function LoginPage() {
     try {
       await authService.sendLoginOTP(email, password);
       setEmailSent(true);
-      setLoginError('');
       setResendCooldown(60);
     } catch (error) {
-      setLoginError(parseError(error));
+      const emailMsg = error.response?.data?.email?.[0];
+      const detail = error.response?.data?.detail;
+      const message = emailMsg || detail || 'Failed to send verification code. Please try again.';
+      setServerError(message);
     } finally {
       setSendingOTP(false);
     }
@@ -146,17 +90,14 @@ export default function LoginPage() {
   const handleResendOTP = async () => {
     if (resendCooldown > 0) return;
     setOtpError('');
-    setOtpServerError('');
     setSendingOTP(true);
     try {
       await authService.sendLoginOTP(email, password);
       setResendCooldown(60);
       setOtp(['', '', '', '', '', '']);
-      setOtpError('');
-      setOtpServerError('');
       if (inputRefs.current[0]) inputRefs.current[0].focus();
     } catch (error) {
-      setOtpServerError(parseError(error));
+      setOtpError('Failed to resend code. Please try again.');
     } finally {
       setSendingOTP(false);
     }
@@ -169,6 +110,7 @@ export default function LoginPage() {
     setOtp(newOtp);
     setOtpError('');
 
+    // Auto-focus next input
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
     }
@@ -183,49 +125,51 @@ export default function LoginPage() {
   const handleOtpPaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length >= 1) {
-      const newOtp = pasted.split('').concat(['', '', '', '', '', '']).slice(0, 6);
+    if (pasted.length === 6) {
+      const newOtp = pasted.split('');
       setOtp(newOtp);
-      const nextEmpty = Math.min(pasted.length, 5);
-      inputRefs.current[nextEmpty]?.focus();
+      inputRefs.current[5]?.focus();
     }
   };
 
-  const handleVerifyOTP = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
     setOtpError('');
-    setOtpServerError('');
 
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
-      setOtpError('Please enter the complete 6-digit code');
+      setOtpError('Please enter the 6-digit code');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { access, user: userData } = await authService.verifyLoginOTP(email, otpCode);
-      await loginWithTokens({ access, user: userData });
+      // Verify OTP — backend returns JWT tokens directly
+      const { user: userData } = await authService.verifyLoginOTP(email, otpCode);
+      await loginWithTokens({ user: userData });
       navigate(from, { replace: true });
     } catch (error) {
-      const msg = parseError(error);
-      // OTP-specific field errors go under the inputs
       if (error.response?.data?.otp) {
-        setOtpError(msg);
+        setOtpError(error.response.data.otp);
       } else {
-        setOtpServerError(msg);
+        const message =
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          error.response?.data?.non_field_errors?.[0] ||
+          'Verification failed. Please try again.';
+        setServerError(message);
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleBackToLogin = () => {
+  const handleBackToEmail = () => {
     setEmailSent(false);
     setOtp(['', '', '', '', '', '']);
     setOtpError('');
-    setOtpServerError('');
-    setLoginError('');
+    setServerError('');
   };
 
   if (authLoading) {
@@ -248,32 +192,26 @@ export default function LoginPage() {
           <p style={styles.brandSubtext}>Digital Banking</p>
         </div>
 
+        {/* Alert */}
+        {serverError && (
+          <div style={{ marginBottom: '20px' }}>
+            <Alert type="error" message={serverError} onClose={() => setServerError('')} />
+          </div>
+        )}
+
         {!emailSent ? (
-          /* ── Step 1: Login (Email + Password) ── */
+          /* ── Step 1: Enter Email + Password ── */
           <>
             <h2 style={styles.heading}>Welcome back</h2>
-            <p style={styles.subheading}>Sign in to your account</p>
+            <p style={styles.subheading}>Enter your credentials to receive a verification code</p>
 
-            {loginError && (
-              <div style={styles.errorBox}>
-                <div style={styles.errorIconWrap}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                  </svg>
-                </div>
-                <span style={styles.errorText}>{loginError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} style={styles.form}>
+            <form onSubmit={handleSendOTP} style={styles.form}>
               <InputField
                 label="Email Address"
                 type="email"
                 name="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setEmailError(''); setLoginError(''); }}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
                 error={emailError}
                 required
                 icon={
@@ -289,7 +227,7 @@ export default function LoginPage() {
                 type="password"
                 name="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setPasswordError(''); setLoginError(''); }}
+                onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
                 error={passwordError}
                 required
                 icon={
@@ -300,6 +238,7 @@ export default function LoginPage() {
                 }
               />
 
+              {/* Forgot password */}
               <div style={{ textAlign: 'right' }}>
                 <Link to="/forgot-password" style={styles.forgotLink}>
                   Forgot Password?
@@ -307,42 +246,22 @@ export default function LoginPage() {
               </div>
 
               <Button type="submit" fullWidth loading={sendingOTP} size="lg">
-                Login
+                Send Verification Code
               </Button>
             </form>
           </>
         ) : (
-          /* ── Step 2: OTP Verification ── */
+          /* ── Step 2: OTP Only (credentials already verified) ── */
           <>
-            {/* Success indicator */}
-            <div style={styles.otpHeader}>
-              <div style={styles.otpIconCircle}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
-                </svg>
-              </div>
-            </div>
-
-            <h2 style={styles.heading}>Check your email</h2>
+            <h2 style={styles.heading}>Verify your identity</h2>
             <p style={styles.subheading}>
-              We sent a 6-digit verification code to <strong style={{ color: '#111827' }}>{maskEmail(email)}</strong>
+              We sent a code to <strong style={{ color: '#111827' }}>{maskEmail(email)}</strong>
             </p>
 
-            {otpServerError && (
-              <div style={styles.errorBox}>
-                <div style={styles.errorIconWrap}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                  </svg>
-                </div>
-                <span style={styles.errorText}>{otpServerError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleVerifyOTP} style={styles.form}>
+            <form onSubmit={handleSubmit} style={styles.form}>
+              {/* OTP Input */}
               <div style={styles.otpSection}>
+                <label style={styles.otpLabel}>Verification Code</label>
                 <div style={styles.otpInputs}>
                   {otp.map((digit, index) => (
                     <input
@@ -358,43 +277,41 @@ export default function LoginPage() {
                       style={{
                         ...styles.otpInput,
                         borderColor: otpError ? '#dc2626' : digit ? '#1a56db' : '#d1d5db',
-                        boxShadow: otpError ? '0 0 0 1px #dc2626' : digit ? '0 0 0 1px #1a56db' : 'none',
                       }}
                     />
                   ))}
                 </div>
                 {otpError && <span style={styles.fieldError}>{otpError}</span>}
-              </div>
-
-              <Button type="submit" fullWidth loading={isSubmitting} size="lg">
-                Verify
-              </Button>
-
-              <div style={styles.resendRow}>
-                {resendCooldown > 0 ? (
-                  <span style={styles.resendTextDisabled}>
-                    Resend code in {resendCooldown}s
-                  </span>
-                ) : (
+                <div style={styles.resendRow}>
                   <button
                     type="button"
                     onClick={handleResendOTP}
-                    disabled={sendingOTP}
-                    style={styles.resendBtn}
+                    disabled={resendCooldown > 0 || sendingOTP}
+                    style={{
+                      ...styles.resendBtn,
+                      color: resendCooldown > 0 ? '#9ca3af' : '#1a56db',
+                      cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                    }}
                   >
-                    {sendingOTP ? 'Sending...' : 'Resend code'}
+                    {resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend code'}
                   </button>
-                )}
+                </div>
               </div>
 
-              <button type="button" onClick={handleBackToLogin} style={styles.backBtn}>
-                ← Back to login
+              <Button type="submit" fullWidth loading={isSubmitting} size="lg">
+                Sign In
+              </Button>
+
+              <button type="button" onClick={handleBackToEmail} style={styles.backBtn}>
+                Use a different email
               </button>
             </form>
           </>
         )}
 
-        {/* Footer */}
+        {/* Register link */}
         <div style={styles.footer}>
           <span style={styles.footerText}>Don't have an account?</span>{' '}
           <Link to="/register" style={styles.footerLink}>
@@ -402,11 +319,14 @@ export default function LoginPage() {
           </Link>
         </div>
 
+        {/* Security note */}
         <div style={styles.securityNote}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
           </svg>
-          <span style={styles.securityText}>Your connection is encrypted and secure</span>
+          <span style={styles.securityText}>
+            Your connection is encrypted and secure
+          </span>
         </div>
       </div>
 
@@ -481,59 +401,28 @@ const styles = {
     fontWeight: 600,
     color: '#111827',
     margin: '0 0 6px 0',
-    textAlign: 'center',
   },
   subheading: {
     fontSize: '14px',
     color: '#6b7280',
-    margin: '0 0 24px 0',
+    margin: '0 0 28px 0',
     lineHeight: '20px',
-    textAlign: 'center',
-  },
-  // Error box
-  errorBox: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '10px',
-    backgroundColor: '#fef2f2',
-    border: '1px solid #fecaca',
-    borderRadius: '8px',
-    padding: '12px 14px',
-    marginBottom: '20px',
-  },
-  errorIconWrap: {
-    flexShrink: 0,
-    marginTop: '1px',
-  },
-  errorText: {
-    fontSize: '13px',
-    color: '#991b1b',
-    lineHeight: '18px',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: '20px',
   },
-  // OTP step
-  otpHeader: {
-    display: 'flex',
-    justifyContent: 'center',
-    marginBottom: '16px',
-  },
-  otpIconCircle: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    backgroundColor: '#eff6ff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   otpSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '8px',
+  },
+  otpLabel: {
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#374151',
+    marginBottom: '4px',
   },
   otpInputs: {
     display: 'flex',
@@ -541,15 +430,15 @@ const styles = {
     justifyContent: 'center',
   },
   otpInput: {
-    width: '46px',
-    height: '54px',
+    width: '44px',
+    height: '52px',
     textAlign: 'center',
     fontSize: '20px',
     fontWeight: 600,
     border: '2px solid #d1d5db',
-    borderRadius: '10px',
+    borderRadius: '8px',
     outline: 'none',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
+    transition: 'border-color 0.15s',
     fontFamily: 'Inter, -apple-system, sans-serif',
   },
   fieldError: {
@@ -563,17 +452,10 @@ const styles = {
   resendBtn: {
     fontSize: '13px',
     fontWeight: 500,
-    color: '#1a56db',
     background: 'none',
     border: 'none',
     padding: '4px 0',
-    cursor: 'pointer',
     fontFamily: 'Inter, -apple-system, sans-serif',
-  },
-  resendTextDisabled: {
-    fontSize: '13px',
-    fontWeight: 500,
-    color: '#9ca3af',
   },
   forgotLink: {
     fontSize: '14px',
